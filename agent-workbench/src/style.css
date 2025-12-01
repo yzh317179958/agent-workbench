@@ -1,51 +1,79 @@
 :root {
-  /* 基础色调：冷灰系，专业感强，减少眼部疲劳 */
-  --agent-body-bg: #f0f2f5; 
-  --agent-secondary-bg: #ffffff; 
+  /* ========== 基础色调 ========== */
+  /* 参考拼多多商家工作台、聚水潭：简约、专业、降低视觉疲劳 */
+  --agent-body-bg: #f5f6f8; /* 更浅的灰色背景,更清爽 */
+  --agent-secondary-bg: #ffffff;
   --agent-panel-bg: #ffffff;
-  
-  /* 品牌色：使用沉稳的科技蓝 (参考 Ant Design / 企业微信) */
-  --agent-primary-color: #1677ff; 
-  --agent-primary-hover: #4096ff;
-  --agent-primary-light: #e6f4ff; /* 选中态背景色 */
-  --agent-primary-color-rgb: 22, 119, 255;
-  
-  /* 辅助色 */
-  --agent-success: #52c41a;
-  --agent-warning: #faad14;
-  --agent-danger: #ff4d4f;
-  --agent-info: #1677ff;
-  
-  /* 文本色 */
-  --agent-text-color: #1f2937; /* 主要文字 */
-  --agent-text-secondary: #6b7280; /* 次要文字 */
-  --agent-text-placeholder: #9ca3af;
-  
-  /* 边框与分割线 */
-  --agent-border-color: #e5e7eb;
-  --agent-border-radius: 6px; /* 更小的圆角，显得更严谨 */
-  --agent-border-radius-lg: 8px;
-  
-  /* 阴影 */
-  --agent-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --agent-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --agent-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  
-  /* 布局尺寸 */
+  --agent-hover-bg: #f7f8fa; /* 悬停状态背景 */
+
+  /* ========== 品牌色系 ========== */
+  /* 使用更稳重的蓝色,参考企业级SaaS系统 */
+  --agent-primary-color: #2563eb; /* 更深沉的蓝色 */
+  --agent-primary-hover: #3b82f6;
+  --agent-primary-light: #eff6ff; /* 更浅的选中态背景 */
+  --agent-primary-dark: #1e40af; /* 深色变体 */
+  --agent-primary-color-rgb: 37, 99, 235;
+
+  /* ========== 辅助色系 ========== */
+  --agent-success: #10b981; /* 绿色 */
+  --agent-success-light: #d1fae5;
+  --agent-warning: #f59e0b; /* 橙色 */
+  --agent-warning-light: #fef3c7;
+  --agent-danger: #ef4444; /* 红色 */
+  --agent-danger-light: #fee2e2;
+  --agent-info: #3b82f6; /* 信息蓝 */
+  --agent-info-light: #dbeafe;
+
+  /* ========== 文本色系 ========== */
+  --agent-text-color: #1e293b; /* 主要文字,更深 */
+  --agent-text-secondary: #64748b; /* 次要文字 */
+  --agent-text-tertiary: #94a3b8; /* 三级文字 */
+  --agent-text-placeholder: #cbd5e1; /* 占位符文字 */
+  --agent-text-light: #94a3b8; /* 浅色文字 */
+  --agent-text-disabled: #cbd5e1; /* 禁用文字 */
+
+  /* ========== 边框与分割线 ========== */
+  --agent-border-color: #e2e8f0; /* 更柔和的边框色 */
+  --agent-border-color-light: #f1f5f9; /* 浅色边框 */
+  --agent-border-color-dark: #cbd5e1; /* 深色边框 */
+  --agent-border-radius: 4px; /* 统一使用4px圆角,更专业 */
+  --agent-border-radius-sm: 2px; /* 小圆角 */
+  --agent-border-radius-lg: 8px; /* 大圆角 */
+
+  /* ========== 阴影系统 ========== */
+  /* 更微妙的阴影,参考现代设计系统 */
+  --agent-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --agent-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --agent-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --agent-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --agent-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+
+  /* ========== 布局尺寸 ========== */
   --header-height: 56px;
-  --sidebar-width: 280px; /* 会话列表宽度 */
-  --details-width: 300px; /* 右侧详情宽度 */
+  --sidebar-width: 300px; /* 会话列表宽度,稍宽更清晰 */
+  --details-width: 320px; /* 右侧详情宽度 */
+
+  /* ========== 间距系统 ========== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
 }
 
-/* 深色模式适配 (预留) */
+/* ========== 深色模式适配 ========== */
 [data-agent-theme='dark'] {
-  --agent-body-bg: #0d1117;
-  --agent-secondary-bg: #161b22;
-  --agent-panel-bg: #161b22;
-  --agent-text-color: #c9d1d9;
-  --agent-border-color: #30363d;
-  --agent-text-secondary: #8b949e;
-  --agent-primary-light: #1f2937;
+  --agent-body-bg: #0f172a;
+  --agent-secondary-bg: #1e293b;
+  --agent-panel-bg: #1e293b;
+  --agent-hover-bg: #334155;
+  --agent-text-color: #e2e8f0;
+  --agent-text-secondary: #94a3b8;
+  --agent-text-tertiary: #64748b;
+  --agent-border-color: #334155;
+  --agent-border-color-light: #1e293b;
+  --agent-primary-light: #1e3a8a;
 }
 
 html, body, #app {
@@ -61,20 +89,40 @@ html, body, #app {
   color: var(--agent-text-color);
 }
 
-/* 滚动条美化 - 类似 Mac 风格 */
+/* ========== 滚动条美化 ========== */
+/* 参考现代设计系统,更细腻的滚动条 */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
+  background-color: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background-color: rgba(148, 163, 184, 0.5);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: rgba(148, 163, 184, 0.7);
+}
+
+/* 深色模式滚动条 */
+[data-agent-theme='dark'] ::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.4);
+}
+
+[data-agent-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.6);
 }
 
 button {
