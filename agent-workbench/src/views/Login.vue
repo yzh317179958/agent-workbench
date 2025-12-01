@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgentStore } from '@/stores/agentStore'
 import axios from 'axios'
@@ -25,7 +25,6 @@ const handleLogin = async () => {
   error.value = ''
 
   try {
-    // 调用JWT登录API
     const response = await axios.post(`${API_BASE}/api/agent/login`, {
       username: username.value,
       password: password.value
@@ -35,17 +34,14 @@ const handleLogin = async () => {
       throw new Error(response.data.message || '登录失败')
     }
 
-    // 保存Token到当前标签，支持多账号同时登录
     setAccessToken(response.data.token)
 
-    // 保存用户信息到store
     await agentStore.login({
       agentId: response.data.agent.username,
       agentName: response.data.agent.name,
       role: response.data.agent.role
     } as any)
 
-    // 跳转到工作台
     router.push('/dashboard')
   } catch (err: any) {
     error.value = err.response?.data?.detail || err.message || '登录失败'
@@ -54,11 +50,175 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+// ==========================================
+// 粒子交互特效逻辑 (Antigravity Effect)
+// ==========================================
+const canvasRef = ref<HTMLCanvasElement | null>(null)
+let ctx: CanvasRenderingContext2D | null = null
+let animationFrameId: number
+let particles: Particle[] = []
+let mouse = { x: -9999, y: -9999 } // 初始鼠标位置在屏幕外
+
+// 粒子配置
+const PARTICLE_COUNT_FACTOR = 9000 // 屏幕面积除以此数等于粒子数 (数值越大粒子越少)
+const CONNECT_DISTANCE = 110 // 连线距离
+const MOUSE_REPULSION_RADIUS = 120 // 鼠标排斥半径
+const MOUSE_REPULSION_FORCE = 8 // 排斥力度
+
+class Particle {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  size: number
+  baseX: number
+  baseY: number
+  density: number
+
+  constructor(width: number, height: number) {
+    this.x = Math.random() * width
+    this.y = Math.random() * height
+    this.vx = (Math.random() - 0.5) * 0.8 // 随机横向速度
+    this.vy = (Math.random() - 0.5) * 0.8 // 随机纵向速度
+    this.size = Math.random() * 2 + 1
+    this.baseX = this.x
+    this.baseY = this.y
+    this.density = (Math.random() * 30) + 1
+  }
+
+  update(width: number, height: number) {
+    // 1. 基础移动
+    this.x += this.vx
+    this.y += this.vy
+
+    // 2. 边界反弹
+    if (this.x < 0 || this.x > width) this.vx = -this.vx
+    if (this.y < 0 || this.y > height) this.vy = -this.vy
+
+    // 3. 鼠标交互 (Antigravity / Repulsion)
+    const dx = mouse.x - this.x
+    const dy = mouse.y - this.y
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    if (distance < MOUSE_REPULSION_RADIUS) {
+      // 计算斥力方向和大小
+      const forceDirectionX = dx / distance
+      const forceDirectionY = dy / distance
+      const force = (MOUSE_REPULSION_RADIUS - distance) / MOUSE_REPULSION_RADIUS
+      const directionX = forceDirectionX * force * this.density
+      const directionY = forceDirectionY * force * this.density
+
+      // 粒子被推开
+      this.x -= directionX
+      this.y -= directionY
+    }
+  }
+
+  draw() {
+    if (!ctx) return
+    // 使用品牌色 4ECDC4 的变体，降低不透明度
+    ctx.fillStyle = 'rgba(78, 205, 196, 0.6)' 
+    ctx.beginPath()
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+    ctx.closePath()
+    ctx.fill()
+  }
+}
+
+function initParticles() {
+  if (!canvasRef.value) return
+  const { width, height } = canvasRef.value
+  particles = []
+  const numberOfParticles = (width * height) / PARTICLE_COUNT_FACTOR
+  for (let i = 0; i < numberOfParticles; i++) {
+    particles.push(new Particle(width, height))
+  }
+}
+
+function animate() {
+  if (!canvasRef.value || !ctx) return
+  const width = canvasRef.value.width
+  const height = canvasRef.value.height
+  
+  ctx.clearRect(0, 0, width, height)
+
+  for (let i = 0; i < particles.length; i++) {
+    let p = particles[i]
+    p.update(width, height)
+    p.draw()
+
+    // 粒子连线逻辑
+    for (let j = i; j < particles.length; j++) {
+      const p2 = particles[j]
+      const dx = p.x - p2.x
+      const dy = p.y - p2.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
+
+      if (distance < CONNECT_DISTANCE) {
+        ctx.beginPath()
+        // 距离越近线越粗，颜色越深
+        const opacity = 1 - (distance / CONNECT_DISTANCE)
+        ctx.strokeStyle = `rgba(78, 205, 196, ${opacity * 0.2})`
+        ctx.lineWidth = 1
+        ctx.moveTo(p.x, p.y)
+        ctx.lineTo(p2.x, p2.y)
+        ctx.stroke()
+      }
+    }
+  }
+  animationFrameId = requestAnimationFrame(animate)
+}
+
+function handleResize() {
+  if (canvasRef.value) {
+    canvasRef.value.width = window.innerWidth
+    canvasRef.value.height = window.innerHeight
+    initParticles()
+  }
+}
+
+function handleMouseMove(e: MouseEvent) {
+  const rect = canvasRef.value?.getBoundingClientRect()
+  if (rect) {
+    mouse.x = e.clientX - rect.left
+    mouse.y = e.clientY - rect.top
+  }
+}
+
+function handleMouseLeave() {
+  mouse.x = -9999
+  mouse.y = -9999
+}
+
+onMounted(() => {
+  if (canvasRef.value) {
+    ctx = canvasRef.value.getContext('2d')
+    canvasRef.value.width = window.innerWidth
+    canvasRef.value.height = window.innerHeight
+    
+    initParticles()
+    animate()
+
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseout', handleMouseLeave)
+  }
+})
+
+onUnmounted(() => {
+  cancelAnimationFrame(animationFrameId)
+  window.removeEventListener('resize', handleResize)
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseout', handleMouseLeave)
+})
 </script>
 
 <template>
   <div class="login-container">
     <div class="login-background">
+      <canvas ref="canvasRef" class="particle-canvas"></canvas>
+      
       <div class="gradient-orb orb-1"></div>
       <div class="gradient-orb orb-2"></div>
       <div class="grid-pattern"></div>
@@ -164,6 +324,18 @@ const handleLogin = async () => {
   right: 0;
   bottom: 0;
   overflow: hidden;
+  /* z-index 不设置或设为0，确保在登录框之下 */
+}
+
+/* 新增：粒子画布样式 */
+.particle-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2; /* 位于 orb 和 grid 之上，但位于 login-box 之下 */
+  pointer-events: none; /* 确保不影响鼠标交互 */
 }
 
 .gradient-orb {
@@ -172,6 +344,7 @@ const handleLogin = async () => {
   filter: blur(100px);
   opacity: 0.3;
   animation: float 25s ease-in-out infinite;
+  z-index: 1;
 }
 
 .orb-1 {
@@ -215,6 +388,7 @@ const handleLogin = async () => {
     linear-gradient(90deg, rgba(78, 205, 196, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   animation: gridMove 60s linear infinite;
+  z-index: 0;
 }
 
 @keyframes gridMove {
@@ -236,7 +410,7 @@ const handleLogin = async () => {
   width: 100%;
   max-width: 460px;
   position: relative;
-  z-index: 10;
+  z-index: 10; /* 确保登录框在粒子层之上 */
   animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

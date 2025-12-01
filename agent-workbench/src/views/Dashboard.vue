@@ -116,6 +116,8 @@ const customTimeStart = ref<Date | null>(null)
 const customTimeEnd = ref<Date | null>(null)
 const customerType = ref<'all' | 'vip' | 'old' | 'new'>('all')
 const sortBy = ref<'default' | 'newest' | 'oldest' | 'vip' | 'waitTime'>('default')
+const agentFilterMode = ref<'all' | 'mine' | 'unassigned' | 'custom'>('all')
+const customAgentValue = ref('')
 
 // 搜索关键词
 const searchKeyword = ref('')
@@ -148,11 +150,21 @@ const applyAdvancedFilter = async () => {
     }
   }
 
+  let agentParam: string | undefined
+  if (agentFilterMode.value === 'mine' && agentStore.agentId) {
+    agentParam = agentStore.agentId
+  } else if (agentFilterMode.value === 'unassigned') {
+    agentParam = 'unassigned'
+  } else if (agentFilterMode.value === 'custom' && customAgentValue.value.trim()) {
+    agentParam = customAgentValue.value.trim()
+  }
+
   // 调用高级筛选API
   await sessionStore.fetchSessionsAdvanced({
     status: currentFilter.value,
     timeStart,
     timeEnd,
+    agent: agentParam,
     customerType: customerType.value,
     keyword: searchKeyword.value,
     sort: sortBy.value
@@ -160,8 +172,20 @@ const applyAdvancedFilter = async () => {
 }
 
 // 监听筛选条件变化
-watch([currentFilter, timeRange, customerType, sortBy], () => {
+watch([currentFilter, timeRange, customerType, sortBy, agentFilterMode], () => {
   applyAdvancedFilter()
+})
+
+watch(customAgentValue, (value) => {
+  if (agentFilterMode.value === 'custom' && value !== undefined) {
+    applyAdvancedFilter()
+  }
+})
+
+watch([customTimeStart, customTimeEnd], () => {
+  if (hasCustomTime.value) {
+    applyAdvancedFilter()
+  }
 })
 
 // 监听搜索关键词变化（防抖500ms）
@@ -178,6 +202,113 @@ watch(searchKeyword, () => {
   searchDebounce = setTimeout(() => {
     applyAdvancedFilter()
   }, 500)
+})
+
+const hasCustomTime = computed(() => timeRange.value === 'custom')
+
+const timeRangeLabel = (value: string) => {
+  const map: Record<string, string> = {
+    today: '今天',
+    last3days: '最近3天',
+    last7days: '最近7天',
+    thisMonth: '本月',
+    custom: '自定义时间'
+  }
+  return map[value] || value
+}
+
+const customerTypeLabel = (value: string) => {
+  const map: Record<string, string> = {
+    all: '全部客户',
+    vip: 'VIP客户',
+    old: '老客户',
+    new: '新客户'
+  }
+  return map[value] || value
+}
+
+const sortLabel = (value: string) => {
+  const map: Record<string, string> = {
+    default: '默认排序',
+    newest: '最新优先',
+    oldest: '最早优先',
+    vip: 'VIP优先',
+    waitTime: '等待时长'
+  }
+  return map[value] || value
+}
+
+const agentFilterModeLabel = (value: string) => {
+  const map: Record<string, string> = {
+    mine: '我的会话',
+    unassigned: '未分配',
+    custom: '指定坐席'
+  }
+  return map[value] || value
+}
+
+const activeFilters = computed(() => {
+  const chips: string[] = []
+  if (currentFilter.value !== 'all') {
+    chips.push(`状态：${currentFilter.value}`)
+  }
+  if (timeRange.value !== 'today') {
+    chips.push(timeRangeLabel(timeRange.value))
+  }
+  if (hasCustomTime.value && (customTimeStart.value || customTimeEnd.value)) {
+    chips.push('已选择自定义时间')
+  }
+  if (customerType.value !== 'all') {
+    chips.push(customerTypeLabel(customerType.value))
+  }
+  if (sortBy.value !== 'default') {
+    chips.push(sortLabel(sortBy.value))
+  }
+  if (agentFilterMode.value !== 'all') {
+    if (agentFilterMode.value === 'custom') {
+      chips.push(`坐席：${customAgentValue.value || '未填写'}`)
+    } else {
+      chips.push(agentFilterModeLabel(agentFilterMode.value))
+    }
+  }
+  if (searchKeyword.value.trim()) {
+    chips.push(`搜索：${searchKeyword.value.trim()}`)
+  }
+  return chips
+})
+
+const hasActiveFilters = computed(() => activeFilters.value.length > 0)
+
+const clearAllFilters = () => {
+  currentFilter.value = 'pending_manual'
+  timeRange.value = 'today'
+  customTimeStart.value = null
+  customTimeEnd.value = null
+  customerType.value = 'all'
+  sortBy.value = 'default'
+  agentFilterMode.value = 'all'
+  customAgentValue.value = ''
+  searchKeyword.value = ''
+}
+
+const customTimeStartInput = computed<string>({
+  get() {
+    if (!customTimeStart.value) return ''
+    return new Date(customTimeStart.value).toISOString().slice(0, 16)
+  },
+  set(value: string) {
+    customTimeStart.value = value ? new Date(value) : null
+  }
+})
+
+const customTimeEndInput = computed<string>({
+  get() {
+    if (!customTimeEnd.value) return ''
+    return new Date(customTimeEnd.value).toISOString().slice(0, 16)
+  },
+  set(value: string) {
+    customTimeEnd.value = value ? new Date(value) : null
+  }
 })
 
 watch(() => settingsStore.settings.behavior.autoLoadHistory, (auto) => {
@@ -789,6 +920,18 @@ const formatNoteTime = (timestamp: number) => {
   return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
+const formatQueuePriority = (level?: string) => {
+  if (!level) {
+    return { label: '普通', className: 'priority-normal' }
+  }
+  const map: Record<string, { label: string; className: string }> = {
+    urgent: { label: '紧急', className: 'priority-urgent' },
+    high: { label: '重要', className: 'priority-high' },
+    normal: { label: '普通', className: 'priority-normal' }
+  }
+  return map[level] || { label: level, className: 'priority-normal' }
+}
+
 // 【模块6】快捷键处理函数
 const focusSearchInput = () => {
   if (searchInputRef.value) {
@@ -1022,22 +1165,6 @@ const handleKeyPress = (event: KeyboardEvent) => {
       handleSendMessage()
     }
   }
-}
-
-const mentionRegex = /@([a-zA-Z0-9_\-]+)/g
-const extractMentions = (text: string): string[] => {
-  const matches = text.matchAll(mentionRegex)
-  const mentions = new Set<string>()
-  for (const match of matches) {
-    if (match[1]) {
-      mentions.add(match[1])
-    }
-  }
-  return Array.from(mentions)
-}
-
-const formatNoteContent = (content: string) => {
-  return content.replace(mentionRegex, '<span class="mention-highlight">@$1</span>')
 }
 
 // 获取可转接的坐席列表
@@ -1564,6 +1691,7 @@ onUnmounted(() => {
             <span class="queue-icon">📋</span>
             <span class="queue-title">等待队列</span>
             <span class="queue-count">{{ sessionStore.queueStats.total_count }}人</span>
+            <span class="queue-count vip">VIP {{ sessionStore.queueStats.vip_count }}</span>
           </div>
           <div class="queue-metrics">
             <div class="queue-metric">
@@ -1582,6 +1710,37 @@ onUnmounted(() => {
               <span class="metric-value">{{ formatTime(sessionStore.queueStats.max_wait_time) }}</span>
             </div>
           </div>
+          <div v-if="sessionStore.queueData.length" class="queue-list">
+            <div
+              v-for="item in sessionStore.queueData"
+              :key="item.session_name"
+              class="queue-item"
+            >
+              <div class="queue-item-header">
+                <div class="queue-item-info">
+                  <span class="queue-name">{{ item.user_profile?.nickname || item.session_name }}</span>
+                  <span
+                    class="queue-priority"
+                    :class="formatQueuePriority(item.priority_level).className"
+                  >
+                    {{ formatQueuePriority(item.priority_level).label }}
+                  </span>
+                  <span v-if="item.is_vip" class="queue-vip">VIP</span>
+                </div>
+                <span class="queue-position">#{{ item.position }}</span>
+              </div>
+              <div class="queue-item-body">
+                <span>等待 {{ formatTime(item.wait_time_seconds) }}</span>
+                <span v-if="item.urgent_keywords?.length">
+                  关键词：{{ item.urgent_keywords.join(' / ') }}
+                </span>
+                <span v-if="item.last_message">
+                  最近：{{ item.last_message }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div v-else class="queue-empty">暂无详细队列数据</div>
         </div>
 
         <!-- 筛选标签 -->
@@ -1611,18 +1770,25 @@ onUnmounted(() => {
 
         <!-- 【L1-1-Part1-模块1】高级筛选栏 -->
         <div class="advanced-filters">
-          <!-- 时间范围筛选 -->
           <div class="filter-group">
+            <label>时间范围</label>
             <select v-model="timeRange" class="filter-select">
               <option value="today">今天</option>
               <option value="last3days">最近3天</option>
               <option value="last7days">最近7天</option>
               <option value="thisMonth">本月</option>
+              <option value="custom">自定义</option>
             </select>
           </div>
+          <div v-if="hasCustomTime" class="filter-group custom-time-inputs">
+            <label>开始</label>
+            <input type="datetime-local" v-model="customTimeStartInput" />
+            <label>结束</label>
+            <input type="datetime-local" v-model="customTimeEndInput" />
+          </div>
 
-          <!-- 客户类型筛选 -->
           <div class="filter-group">
+            <label>客户类型</label>
             <select v-model="customerType" class="filter-select">
               <option value="all">全部客户</option>
               <option value="vip">VIP客户</option>
@@ -1631,8 +1797,8 @@ onUnmounted(() => {
             </select>
           </div>
 
-          <!-- 排序方式 -->
           <div class="filter-group">
+            <label>排序</label>
             <select v-model="sortBy" class="filter-select">
               <option value="default">默认排序</option>
               <option value="newest">最新优先</option>
@@ -1641,6 +1807,37 @@ onUnmounted(() => {
               <option value="waitTime">等待时长</option>
             </select>
           </div>
+
+          <div class="filter-group agent-filter">
+            <label>坐席</label>
+            <select v-model="agentFilterMode" class="filter-select">
+              <option value="all">全部坐席</option>
+              <option value="mine">我的会话</option>
+              <option value="unassigned">未分配</option>
+              <option value="custom">指定坐席</option>
+            </select>
+            <input
+              v-if="agentFilterMode === 'custom'"
+              type="text"
+              class="filter-input"
+              placeholder="输入坐席ID或用户名"
+              v-model.trim="customAgentValue"
+            />
+          </div>
+
+          <button
+            v-if="hasActiveFilters"
+            class="clear-filters-btn"
+            type="button"
+            @click="clearAllFilters"
+          >
+            重置筛选
+          </button>
+        </div>
+        <div v-if="hasActiveFilters" class="filter-chips">
+          <span v-for="chip in activeFilters" :key="chip" class="filter-chip">
+            {{ chip }}
+          </span>
         </div>
 
         <!-- 搜索框 -->
@@ -2870,15 +3067,23 @@ onUnmounted(() => {
 
 .advanced-filters {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Two columns for better compact display */
-  gap: 8px;
-  padding: 10px 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--agent-border-color);
   background: var(--agent-secondary-bg);
+  align-items: end;
 }
 
 .filter-group {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  color: var(--agent-text-light);
 }
 
 .filter-select {
@@ -2901,6 +3106,130 @@ onUnmounted(() => {
   outline: none;
   border-color: var(--agent-primary-color);
   background: var(--agent-secondary-bg);
+}
+
+.filter-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--agent-border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--agent-text-color);
+  background: var(--agent-body-bg);
+}
+
+.custom-time-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.clear-filters-btn {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border: 1px solid var(--agent-border-color);
+  background: transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+  border-color: var(--agent-primary-color);
+  color: var(--agent-primary-color);
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--agent-secondary-bg);
+  border-bottom: 1px solid var(--agent-border-color);
+}
+
+.filter-chip {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--agent-primary-color);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.queue-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.queue-item {
+  padding: 10px 12px;
+  border: 1px solid var(--agent-border-color);
+  border-radius: 8px;
+  background: var(--agent-body-bg);
+}
+
+.queue-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.queue-item-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--agent-text-color);
+}
+
+.queue-position {
+  font-size: 12px;
+  color: var(--agent-text-light);
+}
+
+.queue-item-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--agent-text-light);
+}
+
+.queue-priority {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.priority-urgent {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.priority-high {
+  background: rgba(249, 115, 22, 0.15);
+  color: #ea580c;
+}
+
+.priority-normal {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--agent-text-light);
+}
+
+.queue-vip {
+  font-size: 12px;
+  color: #f59e0b;
+}
+
+.queue-empty {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--agent-text-light);
 }
 
 .search-box {

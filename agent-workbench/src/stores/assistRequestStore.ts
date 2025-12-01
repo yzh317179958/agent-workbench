@@ -3,6 +3,16 @@ import { ref, computed } from 'vue'
 import type { AssistRequest, AssistStatus } from '@/types'
 import { getAccessToken } from '@/utils/authStorage'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+
+const requireAuth = () => {
+  const token = getAccessToken()
+  if (!token) {
+    throw new Error('UNAUTHORIZED')
+  }
+  return token
+}
+
 export const useAssistRequestStore = defineStore('assistRequests', () => {
   const received = ref<AssistRequest[]>([])
   const sent = ref<AssistRequest[]>([])
@@ -17,15 +27,12 @@ export const useAssistRequestStore = defineStore('assistRequests', () => {
       if (status && status !== 'all') {
         params.append('status', status)
       }
-      const token = getAccessToken()
-      const headers: HeadersInit = {}
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      } else {
-        throw new Error('UNAUTHORIZED')
+      const token = requireAuth()
+      const headers: HeadersInit = {
+        Authorization: `Bearer ${token}`
       }
 
-      const response = await fetch(`/api/assist-requests?${params.toString()}`, { headers })
+      const response = await fetch(`${API_BASE}/api/assist-requests?${params.toString()}`, { headers })
       const data = await response.json()
       if (!response.ok || !data.success) {
         throw new Error(data.detail || '获取协助请求失败')
@@ -40,11 +47,8 @@ export const useAssistRequestStore = defineStore('assistRequests', () => {
   }
 
   async function answerRequest(requestId: string, answer: string) {
-    const token = getAccessToken()
-    if (!token) {
-      throw new Error('UNAUTHORIZED')
-    }
-    const response = await fetch(`/api/assist-requests/${requestId}/answer`, {
+    const token = requireAuth()
+    const response = await fetch(`${API_BASE}/api/assist-requests/${requestId}/answer`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

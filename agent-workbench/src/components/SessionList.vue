@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { SessionSummary } from '@/types'
 
 const props = withDefaults(defineProps<{
@@ -17,17 +16,14 @@ const emit = defineEmits<{
   (e: 'takeover', sessionName: string): void
 }>()
 
-const densityClass = computed(() => `density-${props.density || 'standard'}`)
-const previewEnabled = computed(() => props.showPreview !== false)
-
 // 格式化等待时间
 const formatWaitingTime = (seconds: number) => {
   if (seconds < 60) {
-    return `${Math.round(seconds)}秒`
+    return `${Math.round(seconds)}s`
   } else if (seconds < 3600) {
-    return `${Math.floor(seconds / 60)}分钟`
+    return `${Math.floor(seconds / 60)}m`
   } else {
-    return `${Math.floor(seconds / 3600)}小时`
+    return `${Math.floor(seconds / 3600)}h`
   }
 }
 
@@ -40,157 +36,78 @@ const formatTime = (timestamp: number) => {
   if (diff < 60000) {
     return '刚刚'
   } else if (diff < 3600000) {
-    return `${Math.floor(diff / 60000)}分钟前`
+    return `${Math.floor(diff / 60000)}m`
   } else if (diff < 86400000) {
-    return `${Math.floor(diff / 3600000)}小时前`
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return `${hours}:${minutes}`
   } else {
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+    return date.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })
   }
-}
-
-// 获取状态配置
-const getStatusConfig = (status: string) => {
-  const configs: Record<string, { label: string; class: string; icon: string }> = {
-    pending_manual: {
-      label: '等待接入',
-      class: 'status-pending',
-      icon: '⏳'
-    },
-    manual_live: {
-      label: '服务中',
-      class: 'status-live',
-      icon: '💬'
-    },
-    bot_active: {
-      label: 'AI服务',
-      class: 'status-bot',
-      icon: '🤖'
-    },
-    closed: {
-      label: '已关闭',
-      class: 'status-closed',
-      icon: '🔒'
-    }
-  }
-  return configs[status] || { label: status, class: '', icon: '❓' }
 }
 
 // 截断消息内容
-const truncateMessage = (content: string, maxLength: number = 50) => {
+const truncateMessage = (content: string, maxLength: number = 20) => {
   if (content.length <= maxLength) return content
   return content.slice(0, maxLength) + '...'
-}
-
-// 【模块2】获取优先级配置
-const getPriorityConfig = (level: string) => {
-  const configs: Record<string, { icon: string; class: string; label: string }> = {
-    urgent: {
-      icon: '🔴',
-      class: 'priority-urgent',
-      label: '紧急'
-    },
-    high: {
-      icon: '🟠',
-      class: 'priority-high',
-      label: '重要'
-    }
-  }
-  return configs[level]
 }
 </script>
 
 <template>
-  <div class="session-list" :class="densityClass">
-    <!-- 加载状态 -->
+  <div class="session-list-wrapper">
     <div v-if="props.isLoading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <span>加载中...</span>
+      <div class="spinner"></div>
     </div>
 
-    <!-- 空状态 -->
     <div v-else-if="props.sessions.length === 0" class="empty-state">
       <div class="empty-icon">📭</div>
       <p>暂无会话</p>
     </div>
 
-    <!-- 会话列表 -->
-    <div v-else class="sessions">
+    <div v-else class="sessions-container">
       <div
         v-for="session in props.sessions"
         :key="session.session_name"
-        class="session-item"
+        class="session-card"
         :class="{
-          selected: props.selectedSession === session.session_name,
-          pending: session.status === 'pending_manual'
+          active: props.selectedSession === session.session_name,
+          'status-pending': session.status === 'pending_manual'
         }"
         @click="emit('select', session.session_name)"
       >
-        <!-- 会话头部 -->
-        <div class="session-header">
-          <div class="session-user">
-            <span class="user-avatar">
-              {{ session.user_profile?.nickname?.charAt(0) || '访' }}
-            </span>
-            <span class="user-name">
-              {{ session.user_profile?.nickname || session.session_name.slice(-8) }}
-            </span>
-            <span v-if="session.user_profile?.vip" class="vip-badge">VIP</span>
-            <!-- 【模块2】优先级标识 -->
-            <span
-              v-if="session.priority && getPriorityConfig(session.priority.level)"
-              :class="['priority-badge', getPriorityConfig(session.priority.level)?.class]"
-              :title="getPriorityConfig(session.priority.level)?.label"
-            >
-              {{ getPriorityConfig(session.priority.level)?.icon }}
-            </span>
+        <div class="card-left">
+          <div class="avatar">
+            {{ session.user_profile?.nickname?.charAt(0) || session.session_name.slice(-2) }}
           </div>
-          <div class="session-status" :class="getStatusConfig(session.status).class">
-            <span class="status-icon">{{ getStatusConfig(session.status).icon }}</span>
-            <span class="status-label">{{ getStatusConfig(session.status).label }}</span>
-          </div>
+          <div v-if="session.status === 'pending_manual'" class="status-badge pending"></div>
         </div>
 
-        <!-- 最后一条消息 -->
-          <div v-if="previewEnabled && session.last_message_preview" class="session-preview">
-          <span class="preview-role">
-            {{ session.last_message_preview.role === 'user' ? '用户' : 'AI' }}:
-          </span>
-          <span class="preview-content">
-            {{ truncateMessage(session.last_message_preview.content) }}
-          </span>
-        </div>
-
-        <!-- 会话底部信息 -->
-        <div class="session-footer">
-          <div class="session-time">
-            {{ formatTime(session.updated_at) }}
+        <div class="card-main">
+          <div class="card-row top">
+            <span class="nickname" :title="session.user_profile?.nickname">
+              {{ session.user_profile?.nickname || '访客 ' + session.session_name.slice(-4) }}
+            </span>
+            <span class="time">{{ formatTime(session.updated_at) }}</span>
           </div>
-
-          <!-- 等待时间 (pending_manual状态) -->
-          <div v-if="session.status === 'pending_manual' && session.escalation" class="waiting-time">
-            <span class="waiting-icon">⏱️</span>
-            <span>等待 {{ formatWaitingTime(session.escalation.waiting_seconds) }}</span>
-          </div>
-
-          <!-- 已分配坐席 (manual_live状态) -->
-          <div v-if="session.status === 'manual_live' && session.assigned_agent" class="assigned-agent">
-            <span class="agent-icon">👤</span>
-            <span>{{ session.assigned_agent.name }}</span>
+          
+          <div class="card-row bottom">
+            <span class="msg-preview">
+              <span v-if="session.status === 'pending_manual'" class="wait-tag">
+                等待 {{ formatWaitingTime(session.escalation?.waiting_seconds || 0) }}
+              </span>
+              <span v-else>
+                {{ session.last_message_preview ? truncateMessage(session.last_message_preview.content) : '[新会话]' }}
+              </span>
+            </span>
+            
+            <div class="icons">
+              <span v-if="session.user_profile?.vip" class="vip-tag">VIP</span>
+            </div>
           </div>
         </div>
-
-        <!-- 快速操作按钮 -->
-        <div
-          v-if="session.status === 'pending_manual'"
-          class="session-actions"
-          @click.stop
-        >
-          <button
-            class="takeover-btn"
-            @click="emit('takeover', session.session_name)"
-          >
-            立即接入
-          </button>
+        
+        <div class="card-actions" v-if="session.status === 'pending_manual'">
+           <button class="mini-btn" @click.stop="emit('takeover', session.session_name)">接入</button>
         </div>
       </div>
     </div>
@@ -198,262 +115,163 @@ const getPriorityConfig = (level: string) => {
 </template>
 
 <style scoped>
-.session-list {
+.session-list-wrapper {
   height: 100%;
+  background: #fff;
   overflow-y: auto;
 }
 
-.loading-state,
-.empty-state {
+.loading-state, .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: #6b7280;
+  padding: 60px 0;
+  color: #9ca3af;
+  font-size: 13px;
 }
 
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #667eea;
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #ccc;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 12px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  margin-bottom: 10px;
 }
 
 .empty-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-}
-
-.sessions {
-  padding: 8px;
-}
-
-.session-list.density-compact .sessions {
-  padding: 4px;
-}
-
-.session-list.density-comfortable .sessions {
-  padding: 12px;
-}
-
-.session-item {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px;
+  font-size: 32px;
   margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+.session-card {
+  display: flex;
+  padding: 12px 16px;
   cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
   transition: all 0.2s;
   position: relative;
 }
 
-.session-list.density-compact .session-item {
-  padding: 8px 10px;
-  margin-bottom: 6px;
+.session-card:hover {
+  background-color: #f9fafb;
 }
 
-.session-list.density-comfortable .session-item {
-  padding: 16px 18px;
-  margin-bottom: 12px;
+.session-card.active {
+  background-color: var(--agent-primary-light);
+  border-right: 3px solid var(--agent-primary-color);
 }
 
-.session-item:hover {
-  border-color: #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+.card-left {
+  position: relative;
+  margin-right: 12px;
 }
 
-.session-item.selected {
-  border-color: #667eea;
-  background: #f5f3ff;
-}
-
-.session-item.pending {
-  border-left: 3px solid #f59e0b;
-}
-
-.session-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.session-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #4338ca;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   font-weight: 600;
-}
-
-.user-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.vip-badge {
-  background: #fef3c7;
-  color: #d97706;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-/* 【模块2】优先级标识样式 */
-.priority-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 14px;
-  line-height: 1;
-  cursor: help;
-}
-
-.priority-urgent {
-  background: #fee2e2;
-  animation: pulse-urgent 2s ease-in-out infinite;
-}
-
-.priority-high {
-  background: #fed7aa;
-}
-
-@keyframes pulse-urgent {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.1);
-  }
-}
-
-.session-status {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-}
-
-.status-icon {
-  font-size: 12px;
-}
-
-.status-pending {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.status-live {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
-.status-bot {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.status-closed {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.session-preview {
-  font-size: 13px;
-  color: #6b7280;
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-
-.session-list.density-compact .session-preview {
-  font-size: 12px;
-}
-
-.session-list.density-comfortable .session-preview {
-  font-size: 14px;
-}
-
-.preview-role {
-  color: #9ca3af;
-}
-
-.session-footer {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.session-time {
   flex-shrink: 0;
 }
 
-.waiting-time,
-.assigned-agent {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.waiting-time {
-  color: #d97706;
-}
-
-.assigned-agent {
-  color: #2563eb;
-}
-
-.waiting-icon,
-.agent-icon {
-  font-size: 12px;
-}
-
-.session-actions {
+.status-badge {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
 }
 
-.takeover-btn {
-  padding: 6px 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
+.status-badge.pending {
+  background-color: var(--agent-danger);
+}
+
+.card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nickname {
+  font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  color: var(--agent-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
-.takeover-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.time {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.msg-preview {
+  font-size: 12px;
+  color: var(--agent-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.wait-tag {
+  color: var(--agent-danger);
+  font-weight: 500;
+}
+
+.vip-tag {
+  font-size: 10px;
+  background: #fff7ed;
+  color: #c2410c;
+  padding: 1px 4px;
+  border-radius: 2px;
+  border: 1px solid #ffedd5;
+  font-weight: 600;
+}
+
+.card-actions {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: none;
+}
+
+.session-card:hover .card-actions {
+  display: block;
+}
+
+.mini-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--agent-primary-color);
+  color: #fff;
+  border-radius: 10px;
+  border: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>

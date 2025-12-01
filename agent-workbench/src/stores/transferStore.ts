@@ -3,6 +3,16 @@ import { ref } from 'vue'
 import type { TransferHistoryRecord, TransferRequest } from '@/types'
 import { getAccessToken } from '@/utils/authStorage'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+
+const requireAuth = () => {
+  const token = getAccessToken()
+  if (!token) {
+    throw new Error('UNAUTHORIZED')
+  }
+  return token
+}
+
 export const useTransferStore = defineStore('transfer', () => {
   const pendingRequests = ref<TransferRequest[]>([])
   const loadingPending = ref(false)
@@ -12,12 +22,14 @@ export const useTransferStore = defineStore('transfer', () => {
   async function fetchPendingRequests() {
     loadingPending.value = true
     try {
-      const token = getAccessToken()
-      if (!token) {
+      let token: string
+      try {
+        token = requireAuth()
+      } catch (error) {
         pendingRequests.value = []
-        throw new Error('UNAUTHORIZED')
+        throw error
       }
-      const response = await fetch('/api/transfer-requests/pending', {
+      const response = await fetch(`${API_BASE}/api/transfer-requests/pending`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -40,11 +52,8 @@ export const useTransferStore = defineStore('transfer', () => {
 
   async function respondTransferRequest(requestId: string, action: 'accept' | 'decline', responseNote?: string) {
     try {
-      const token = getAccessToken()
-      if (!token) {
-        throw new Error('UNAUTHORIZED')
-      }
-      const response = await fetch(`/api/transfer-requests/${requestId}/respond`, {
+      const token = requireAuth()
+      const response = await fetch(`${API_BASE}/api/transfer-requests/${requestId}/respond`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,12 +87,14 @@ export const useTransferStore = defineStore('transfer', () => {
 
     loadingHistory.value = true
     try {
-      const token = getAccessToken()
-      if (!token) {
+      let token: string
+      try {
+        token = requireAuth()
+      } catch (error) {
         history.value = []
-        throw new Error('UNAUTHORIZED')
+        throw error
       }
-      const response = await fetch(`/api/sessions/${sessionName}/transfer-history`, {
+      const response = await fetch(`${API_BASE}/api/sessions/${sessionName}/transfer-history`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

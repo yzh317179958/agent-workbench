@@ -17,12 +17,25 @@
 
 import { ref, watch } from 'vue'
 import { useSessionStore } from '../stores/sessionStore'
+import { getAccessToken } from '@/utils/authStorage'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
 interface SSEMessage {
   type: string
   [key: string]: any
+}
+
+const buildSSEHeaders = (): Record<string, string> | null => {
+  const token = getAccessToken()
+  if (!token) {
+    console.warn('❌ 无法建立 SSE 连接：认证信息缺失')
+    return null
+  }
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`
+  }
 }
 
 /**
@@ -172,11 +185,14 @@ export function useAgentWorkbenchSSE() {
 
     console.log(`🔌 建立 SSE 监听: ${sessionName}`)
 
-    currentSessionSSE.value = new FetchSSE(`${API_BASE_URL}/api/chat/stream`, {
+    const headers = buildSSEHeaders()
+    if (!headers) {
+      return
+    }
+
+    currentSessionSSE.value = new FetchSSE(`${API_BASE}/api/chat/stream`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({
         message: '',  // 空消息，仅建立连接
         user_id: sessionName,

@@ -5,6 +5,20 @@ import { getAccessToken } from '@/utils/authStorage'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
+const requireAuthHeaders = (withJson: boolean = true): HeadersInit => {
+  const token = getAccessToken()
+  if (!token) {
+    throw new Error('UNAUTHORIZED')
+  }
+
+  const headers: HeadersInit = {}
+  if (withJson) {
+    headers['Content-Type'] = 'application/json'
+  }
+  headers['Authorization'] = `Bearer ${token}`
+  return headers
+}
+
 export const useSessionStore = defineStore('session', () => {
   // 会话列表
   const sessions = ref<SessionSummary[]>([])
@@ -253,9 +267,10 @@ export const useSessionStore = defineStore('session', () => {
   // 接入会话
   async function takeoverSession(sessionName: string, agentId: string, agentName: string) {
     try {
-      const response = await fetch(`/api/sessions/${sessionName}/takeover`, {
+      const headers = requireAuthHeaders()
+      const response = await fetch(`${API_BASE}/api/sessions/${sessionName}/takeover`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           agent_id: agentId,
           agent_name: agentName
@@ -295,9 +310,10 @@ export const useSessionStore = defineStore('session', () => {
   // 释放会话
   async function releaseSession(sessionName: string, agentId: string, reason: string = 'resolved') {
     try {
-      const response = await fetch(`/api/sessions/${sessionName}/release`, {
+      const headers = requireAuthHeaders()
+      const response = await fetch(`${API_BASE}/api/sessions/${sessionName}/release`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           agent_id: agentId,
           reason: reason
@@ -336,9 +352,10 @@ export const useSessionStore = defineStore('session', () => {
     note?: string
   ) {
     try {
-      const response = await fetch(`/api/sessions/${sessionName}/transfer`, {
+      const headers = requireAuthHeaders()
+      const response = await fetch(`${API_BASE}/api/sessions/${sessionName}/transfer`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           from_agent_id: fromAgentId,
           to_agent_id: toAgentId,
@@ -375,9 +392,10 @@ export const useSessionStore = defineStore('session', () => {
   // 发送消息
   async function sendMessage(sessionName: string, content: string, agentId: string, agentName: string) {
     try {
-      const response = await fetch('/api/manual/messages', {
+      const headers = requireAuthHeaders()
+      const response = await fetch(`${API_BASE}/api/manual/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           session_name: sessionName,
           role: 'agent',
