@@ -2442,24 +2442,26 @@ onUnmounted(() => {
   color: var(--agent-text-color);
 }
 
-/* 头部样式 */
+/* 头部样式 - 专业简约风格优化 */
 .dashboard-header {
-  background: var(--agent-secondary-bg);
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--agent-border-color);
+  background: #FFFFFF;
+  padding: 16px 32px;
+  border-bottom: 1px solid #E8EAED;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  box-shadow: var(--agent-shadow);
-  position: relative; /* For z-index stacking context */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  position: relative;
   z-index: 10;
+  height: 64px;
 }
 
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  min-width: 200px;
 }
 
 .brand-logo-img {
@@ -2474,18 +2476,20 @@ onUnmounted(() => {
 }
 
 .brand-text h1 {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--agent-text-color);
+  font-size: 20px;
+  font-weight: 600;
+  color: #1F2937;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
 }
 
 .brand-subtitle {
   font-size: 12px;
-  color: var(--agent-text-light);
+  color: #9CA3AF;
   display: block;
-  margin-top: 2px;
+  margin-top: 4px;
+  font-weight: 400;
 }
 
 .agent-info {
@@ -2503,14 +2507,14 @@ onUnmounted(() => {
 }
 
 .agent-status-card {
-  background: var(--agent-body-bg);
-  border: 1px solid var(--agent-border-color);
-  border-radius: var(--agent-border-radius);
-  padding: 8px 12px;
-  min-width: 180px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 10px 16px;
+  min-width: 200px;
   position: relative;
-  color: var(--agent-text-color);
-  box-shadow: var(--agent-shadow);
+  color: #1F2937;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .status-trigger {
@@ -2704,57 +2708,67 @@ onUnmounted(() => {
 .agent-work-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  color: var(--agent-text-color);
+  gap: 12px;
+  color: #1F2937;
 }
 
 .work-stat {
-  background: var(--agent-body-bg);
-  border: 1px solid var(--agent-border-color);
-  border-radius: var(--agent-border-radius);
-  padding: 6px 8px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 10px 12px;
   text-align: center;
-  box-shadow: var(--agent-shadow);
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.work-stat:hover {
+  background: #F3F4F6;
+  border-color: #D1D5DB;
 }
 
 .work-stat-label {
-  font-size: 10px;
-  color: var(--agent-text-light);
-  margin-bottom: 2px;
+  font-size: 11px;
+  color: #6B7280;
+  margin-bottom: 4px;
   display: block;
+  font-weight: 500;
 }
 
 .work-stat-value {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   display: block;
+  color: #111827;
 }
 
 .agent-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .agent-actions button {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
+  padding: 8px 16px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   transition: all 0.2s ease;
-  border: 1px solid var(--agent-border-color);
-  background: var(--agent-secondary-bg);
-  color: var(--agent-text-color);
-  box-shadow: var(--agent-shadow);
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
 }
 
 .agent-actions button:hover {
-  background: rgba(var(--agent-primary-color-rgb), 0.1);
-  border-color: var(--agent-primary-color);
-  color: var(--agent-primary-color);
+  background: #F9FAFB;
+  border-color: #1890FF;
+  color: #1890FF;
+  box-shadow: 0 1px 3px rgba(24, 144, 255, 0.12);
 }
 
 .agent-actions button svg {

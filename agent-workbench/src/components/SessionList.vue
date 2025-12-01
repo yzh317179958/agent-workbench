@@ -117,7 +117,7 @@ const truncateMessage = (content: string, maxLength: number = 20) => {
 <style scoped>
 .session-list-wrapper {
   height: 100%;
-  background: #fff;
+  background: #FAFAFA;
   overflow-y: auto;
 }
 
@@ -149,20 +149,27 @@ const truncateMessage = (content: string, maxLength: number = 20) => {
 
 .session-card {
   display: flex;
-  padding: 12px 16px;
+  padding: 14px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #f3f4f6;
-  transition: all 0.2s;
+  border-bottom: 1px solid #E8EAED;
+  transition: all 0.2s ease;
   position: relative;
+  background: #FFFFFF;
+  margin: 0 12px 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .session-card:hover {
-  background-color: #f9fafb;
+  background-color: #F9FAFB;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 
 .session-card.active {
-  background-color: var(--agent-primary-light);
-  border-right: 3px solid var(--agent-primary-color);
+  background-color: #EBF5FF;
+  border-left: 3px solid #1890FF;
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.15);
 }
 
 .card-left {
@@ -171,17 +178,19 @@ const truncateMessage = (content: string, maxLength: number = 20) => {
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  color: #4338ca;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+  color: #1565C0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   flex-shrink: 0;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .status-badge {
@@ -213,42 +222,47 @@ const truncateMessage = (content: string, maxLength: number = 20) => {
 }
 
 .nickname {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--agent-text-color);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
-
-.time {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-.msg-preview {
-  font-size: 12px;
-  color: var(--agent-text-secondary);
+  font-size: 15px;
+  font-weight: 600;
+  color: #1F2937;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 140px;
+  letter-spacing: -0.2px;
 }
 
-.wait-tag {
-  color: var(--agent-danger);
+.time {
+  font-size: 12px;
+  color: #9CA3AF;
   font-weight: 500;
 }
 
-.vip-tag {
-  font-size: 10px;
-  background: #fff7ed;
-  color: #c2410c;
-  padding: 1px 4px;
-  border-radius: 2px;
-  border: 1px solid #ffedd5;
+.msg-preview {
+  font-size: 13px;
+  color: #6B7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  line-height: 1.5;
+}
+
+.wait-tag {
+  color: #EF4444;
   font-weight: 600;
+  font-size: 13px;
+}
+
+.vip-tag {
+  font-size: 11px;
+  background: #FFF7ED;
+  color: #EA580C;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #FFEDD5;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .card-actions {
@@ -263,12 +277,22 @@ const truncateMessage = (content: string, maxLength: number = 20) => {
 }
 
 .mini-btn {
-  font-size: 11px;
-  padding: 2px 8px;
-  background: var(--agent-primary-color);
-  color: #fff;
-  border-radius: 10px;
+  font-size: 12px;
+  padding: 4px 12px;
+  background: #1890FF;
+  color: #FFFFFF;
+  border-radius: 6px;
   border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+}
+
+.mini-btn:hover {
+  background: #40A9FF;
+  box-shadow: 0 3px 6px rgba(24, 144, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 @keyframes spin {
