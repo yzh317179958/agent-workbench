@@ -117,8 +117,8 @@ class Particle {
 
   draw() {
     if (!ctx) return
-    // 使用品牌色 4ECDC4 的变体，降低不透明度
-    ctx.fillStyle = 'rgba(78, 205, 196, 0.6)' 
+    // 使用品牌色 1890FF (蚂蚁蓝) 的变体，降低不透明度
+    ctx.fillStyle = 'rgba(24, 144, 255, 0.55)'
     ctx.beginPath()
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
     ctx.closePath()
@@ -159,9 +159,9 @@ function animate() {
 
       if (distance < CONNECT_DISTANCE) {
         ctx.beginPath()
-        // 距离越近线越粗，颜色越深
+        // 距离越近线越粗，颜色越深 - 使用蚂蚁蓝
         const opacity = 1 - (distance / CONNECT_DISTANCE)
-        ctx.strokeStyle = `rgba(78, 205, 196, ${opacity * 0.2})`
+        ctx.strokeStyle = `rgba(24, 144, 255, ${opacity * 0.18})`
         ctx.lineWidth = 1
         ctx.moveTo(p.x, p.y)
         ctx.lineTo(p2.x, p2.y)
@@ -309,12 +309,14 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* ========== 登录页面容器 ========== */
+/* 保留原有粒子特效设计，优化配色以匹配专业客服系统风格 */
 .login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecef 100%);
+  background: linear-gradient(135deg, #F7F8FA 0%, #EBF5FF 100%);
   position: relative;
   overflow: hidden;
 }
@@ -326,25 +328,25 @@ onUnmounted(() => {
   right: 0;
   bottom: 0;
   overflow: hidden;
-  /* z-index 不设置或设为0，确保在登录框之下 */
 }
 
-/* 新增：粒子画布样式 */
+/* 粒子画布样式 */
 .particle-canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 2; /* 位于 orb 和 grid 之上，但位于 login-box 之下 */
-  pointer-events: none; /* 确保不影响鼠标交互 */
+  z-index: 2;
+  pointer-events: none;
 }
 
+/* 渐变装饰球 */
 .gradient-orb {
   position: absolute;
   border-radius: 50%;
   filter: blur(100px);
-  opacity: 0.3;
+  opacity: 0.25;
   animation: float 25s ease-in-out infinite;
   z-index: 1;
 }
@@ -352,7 +354,7 @@ onUnmounted(() => {
 .orb-1 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, #4ECDC4 0%, transparent 70%);
+  background: radial-gradient(circle, var(--agent-primary-color, #1890FF) 0%, transparent 70%);
   top: -250px;
   left: -250px;
   animation-delay: 0s;
@@ -361,7 +363,7 @@ onUnmounted(() => {
 .orb-2 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, #52C7B8 0%, transparent 70%);
+  background: radial-gradient(circle, var(--agent-primary-hover, #40A9FF) 0%, transparent 70%);
   bottom: -200px;
   right: -200px;
   animation-delay: 12s;
@@ -379,6 +381,7 @@ onUnmounted(() => {
   }
 }
 
+/* 网格背景 */
 .grid-pattern {
   position: absolute;
   top: 0;
@@ -386,8 +389,8 @@ onUnmounted(() => {
   right: 0;
   bottom: 0;
   background-image:
-    linear-gradient(rgba(78, 205, 196, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(78, 205, 196, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(24, 144, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 144, 255, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   animation: gridMove 60s linear infinite;
   z-index: 0;
@@ -402,18 +405,18 @@ onUnmounted(() => {
   }
 }
 
+/* ========== 登录卡片 ========== */
 .login-box {
-  background: white;
-  padding: 50px 45px;
-  border-radius: 20px;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(78, 205, 196, 0.1);
+  background: var(--agent-secondary-bg, #FFFFFF);
+  padding: 48px 44px;
+  border-radius: var(--agent-border-radius-xl, 12px);
+  box-shadow: var(--agent-shadow-xl, 0 12px 32px rgba(0, 0, 0, 0.12));
   width: 100%;
-  max-width: 460px;
+  max-width: 440px;
   position: relative;
-  z-index: 10; /* 确保登录框在粒子层之上 */
+  z-index: 10;
   animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--agent-border-color-light, #F0F0F0);
 }
 
 @keyframes slideIn {
@@ -427,13 +430,14 @@ onUnmounted(() => {
   }
 }
 
+/* ========== 头部区域 ========== */
 .login-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 36px;
 }
 
 .brand-logo-container {
-  margin-bottom: 30px;
+  margin-bottom: 24px;
   animation: logoAppear 0.8s ease 0.2s both;
 }
 
@@ -449,22 +453,22 @@ onUnmounted(() => {
 }
 
 .fiido-logo {
-  height: 80px;
+  height: 72px;
   width: auto;
-  filter: drop-shadow(0 4px 12px rgba(78, 205, 196, 0.2));
+  filter: drop-shadow(0 4px 12px rgba(24, 144, 255, 0.15));
 }
 
 .login-header h1 {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--agent-text-color, #262626);
   margin: 0 0 8px 0;
   letter-spacing: -0.5px;
 }
 
 .subtitle {
   font-size: 11px;
-  color: #4ECDC4;
+  color: var(--agent-primary-color, #1890FF);
   margin: 0;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -472,108 +476,109 @@ onUnmounted(() => {
 }
 
 .divider {
-  width: 60px;
+  width: 56px;
   height: 3px;
-  background: linear-gradient(90deg, #4ECDC4, #52C7B8);
-  margin: 20px auto;
+  background: linear-gradient(90deg, var(--agent-primary-color, #1890FF), var(--agent-primary-hover, #40A9FF));
+  margin: 18px auto;
   border-radius: 2px;
 }
 
 .welcome-text {
   display: block;
   font-size: 14px;
-  color: #718096;
+  color: var(--agent-text-secondary, #595959);
   font-weight: 400;
 }
 
+/* ========== 表单样式 ========== */
 .login-form {
   display: flex;
   flex-direction: column;
 }
 
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .form-group label {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--agent-text-color, #262626);
   margin-bottom: 10px;
 }
 
 .form-group label svg {
-  color: #4ECDC4;
+  color: var(--agent-primary-color, #1890FF);
 }
 
 .form-input {
   width: 100%;
-  padding: 14px 18px;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 15px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 13px 16px;
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius, 6px);
+  font-size: 14px;
+  transition: all var(--transition-normal, 0.2s ease);
   box-sizing: border-box;
-  background: #fafafa;
-  color: #2d3748;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  color: var(--agent-text-color, #262626);
 }
 
 .form-input:hover {
-  border-color: #cbd5e0;
-  background: white;
+  border-color: var(--agent-border-color-dark, #D9D9D9);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #4ECDC4;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(78, 205, 196, 0.1);
+  border-color: var(--agent-primary-color, #1890FF);
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
 }
 
 .form-input::placeholder {
-  color: #a0aec0;
+  color: var(--agent-text-placeholder, #BFBFBF);
 }
 
+/* ========== 错误信息 ========== */
 .error-message {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
-  color: #c53030;
-  padding: 14px 18px;
-  border-radius: 10px;
+  background: var(--agent-danger-light, #FFF2F0);
+  color: var(--agent-danger, #FF4D4F);
+  padding: 13px 16px;
+  border-radius: var(--agent-border-radius, 6px);
   font-size: 13px;
-  margin-bottom: 24px;
-  border-left: 4px solid #fc8181;
+  margin-bottom: 22px;
+  border-left: 3px solid var(--agent-danger, #FF4D4F);
   font-weight: 500;
   animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
-  20%, 40%, 60%, 80% { transform: translateX(8px); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+  20%, 40%, 60%, 80% { transform: translateX(6px); }
 }
 
 .error-message svg {
   flex-shrink: 0;
 }
 
+/* ========== 登录按钮 ========== */
 .login-button {
   width: 100%;
-  padding: 16px 24px;
-  background: linear-gradient(135deg, #4ECDC4 0%, #52C7B8 100%);
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 16px;
+  border-radius: var(--agent-border-radius, 6px);
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(78, 205, 196, 0.4);
+  transition: all var(--transition-normal, 0.2s ease);
+  box-shadow: 0 4px 14px rgba(24, 144, 255, 0.35);
   position: relative;
   overflow: hidden;
 }
@@ -585,13 +590,13 @@ onUnmounted(() => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
   transition: left 0.5s;
 }
 
 .login-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(78, 205, 196, 0.5);
+  box-shadow: 0 8px 20px rgba(24, 144, 255, 0.45);
 }
 
 .login-button:hover:not(:disabled)::before {
@@ -603,7 +608,7 @@ onUnmounted(() => {
 }
 
 .login-button:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: not-allowed;
   transform: none;
 }
@@ -617,23 +622,24 @@ onUnmounted(() => {
 }
 
 .spinner-ring {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
+/* ========== 底部信息 ========== */
 .login-footer {
-  margin-top: 36px;
+  margin-top: 32px;
   text-align: center;
-  padding-top: 24px;
-  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+  border-top: 1px solid var(--agent-border-color-light, #F0F0F0);
 }
 
 .footer-links {
@@ -645,7 +651,27 @@ onUnmounted(() => {
 
 .footer-text {
   font-size: 12px;
-  color: #a0aec0;
+  color: var(--agent-text-tertiary, #8C8C8C);
   font-weight: 500;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 480px) {
+  .login-box {
+    padding: 36px 28px;
+    margin: 16px;
+  }
+
+  .login-header h1 {
+    font-size: 24px;
+  }
+
+  .fiido-logo {
+    height: 60px;
+  }
+
+  .form-input {
+    font-size: 16px; /* 防止iOS缩放 */
+  }
 }
 </style>

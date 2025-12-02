@@ -212,130 +212,160 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* ========== 快捷回复容器 ========== */
+/* 参考专业客服系统的快捷回复面板设计 */
 .quick-replies {
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border-radius: var(--agent-border-radius-lg, 8px);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
   overflow: hidden;
+  box-shadow: var(--agent-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
 }
 
+/* ========== 头部区域 ========== */
 .quick-replies-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--agent-border-color-light, #F0F0F0);
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
 .quick-replies-header h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
-  margin: 0 0 8px 0;
+  color: var(--agent-text-color, #262626);
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quick-replies-header h3::before {
+  content: '⚡';
+  font-size: 14px;
 }
 
 .search-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius-sm, 4px);
   font-size: 13px;
   outline: none;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  color: var(--agent-text-color, #262626);
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.search-input::placeholder {
+  color: var(--agent-text-placeholder, #BFBFBF);
 }
 
 .search-input:focus {
-  border-color: #667eea;
+  border-color: var(--agent-primary-color, #1890FF);
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
 }
 
-/* 加载状态 */
+/* ========== 加载状态 ========== */
 .loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  color: #9ca3af;
+  padding: 32px 20px;
+  color: var(--agent-text-tertiary, #8C8C8C);
   font-size: 13px;
 }
 
 .loading-spinner {
   width: 24px;
   height: 24px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #667eea;
+  border: 2px solid var(--agent-border-color-light, #F0F0F0);
+  border-top-color: var(--agent-primary-color, #1890FF);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
+/* ========== 分类列表 ========== */
 .categories {
-  max-height: 300px;
+  max-height: 280px;
   overflow-y: auto;
 }
 
 .category {
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--agent-border-color-light, #F0F0F0);
 }
 
 .category:last-child {
   border-bottom: none;
 }
 
+/* ========== 分类头部 ========== */
 .category-header {
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  padding: 11px 16px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-fast, 0.15s ease);
+  background: var(--agent-secondary-bg, #FFFFFF);
 }
 
 .category-header:hover {
-  background: #f9fafb;
+  background: var(--agent-hover-bg, #F3F4F6);
 }
 
 .category-name {
   flex: 1;
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--agent-text-color, #262626);
 }
 
 .category-count {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--agent-text-tertiary, #8C8C8C);
+  background: var(--agent-body-bg, #F7F8FA);
+  padding: 2px 8px;
+  border-radius: 10px;
   margin-right: 8px;
 }
 
 .expand-icon {
   font-size: 10px;
-  color: #9ca3af;
-  transition: transform 0.2s;
+  color: var(--agent-text-tertiary, #8C8C8C);
+  transition: transform var(--transition-fast, 0.15s ease);
 }
 
 .expand-icon.expanded {
   transform: rotate(90deg);
 }
 
+/* ========== 分类内容 ========== */
 .category-items {
-  padding: 4px 8px 8px;
-  background: #f9fafb;
+  padding: 6px 10px 10px;
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
+/* ========== 回复项 ========== */
 .reply-item {
-  padding: 8px 12px;
-  margin-bottom: 4px;
-  background: white;
-  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border-radius: var(--agent-border-radius, 6px);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast, 0.15s ease);
   border: 1px solid transparent;
+  box-shadow: var(--agent-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
 
 .reply-item:hover {
-  border-color: #667eea;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+  border-color: var(--agent-primary-color, #1890FF);
+  box-shadow: var(--agent-shadow-hover, 0 4px 16px rgba(24, 144, 255, 0.12));
+  transform: translateY(-1px);
 }
 
 .reply-item:last-child {
@@ -346,69 +376,82 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .reply-title {
   font-size: 13px;
-  font-weight: 500;
-  color: #1f2937;
+  font-weight: 600;
+  color: var(--agent-text-color, #262626);
 }
 
 .shared-badge {
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.7;
 }
 
 .reply-preview {
   display: block;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--agent-text-secondary, #595959);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 4px;
+  line-height: 1.5;
 }
 
+/* ========== 变量标签 ========== */
 .reply-variables {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 6px;
   flex-wrap: wrap;
 }
 
 .variables-label {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--agent-text-tertiary, #8C8C8C);
 }
 
 .variable-tag {
   font-size: 10px;
   padding: 2px 6px;
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--agent-warning-light, #FFFBE6);
+  color: var(--agent-warning, #FAAD14);
   border-radius: 3px;
-  font-family: monospace;
+  font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+  border: 1px solid var(--agent-warning-border, #FFE58F);
 }
 
+/* ========== 快捷键提示 ========== */
 .reply-shortcut {
   font-size: 11px;
-  color: #667eea;
-  margin-top: 4px;
+  color: var(--agent-primary-color, #1890FF);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
+.reply-shortcut::before {
+  content: '⌨';
+  font-size: 10px;
+}
+
+/* ========== 无结果状态 ========== */
 .no-results {
-  padding: 20px;
+  padding: 24px 20px;
   text-align: center;
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--agent-text-tertiary, #8C8C8C);
 }
 
-/* 动画 */
+/* ========== 动画 ========== */
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   max-height: 300px;
   overflow: hidden;
 }
@@ -417,5 +460,7 @@ onMounted(() => {
 .slide-leave-to {
   max-height: 0;
   opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 </style>

@@ -204,29 +204,32 @@ const customerInitial = computed(() => props.customer?.name?.charAt(0)?.toUpperC
 </template>
 
 <style scoped>
+/* ========== 客户画像容器 ========== */
+/* 参考专业CRM系统的客户信息展示设计 */
 .customer-profile {
   height: 100%;
   overflow-y: auto;
 }
 
+/* ========== 加载与空状态 ========== */
 .loading-state,
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 300px;
-  color: #a0aec0;
+  height: 280px;
+  color: var(--agent-text-tertiary, #8C8C8C);
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #4ECDC4;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--agent-border-color-light, #F0F0F0);
+  border-top-color: var(--agent-primary-color, #1890FF);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 @keyframes spin {
@@ -234,165 +237,189 @@ const customerInitial = computed(() => props.customer?.name?.charAt(0)?.toUpperC
 }
 
 .empty-state svg {
-  margin-bottom: 16px;
-  color: #cbd5e0;
+  margin-bottom: 14px;
+  color: var(--agent-border-color-dark, #D9D9D9);
 }
 
+/* ========== 内容区域 ========== */
 .profile-content {
-  padding: 16px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
+/* ========== 卡片样式 ========== */
 .profile-card,
 .status-card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border-radius: var(--agent-border-radius-lg, 8px);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
   overflow: hidden;
+  box-shadow: var(--agent-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
 
 .card-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 16px;
-  background: #f7fafc;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 14px;
+  background: var(--agent-body-bg, #F7F8FA);
+  border-bottom: 1px solid var(--agent-border-color-light, #F0F0F0);
 }
 
 .card-header svg {
-  color: #4ECDC4;
+  color: var(--agent-primary-color, #1890FF);
+  flex-shrink: 0;
 }
 
 .card-header h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #2d3748;
+  color: var(--agent-text-color, #262626);
 }
 
 .card-body {
-  padding: 16px;
+  padding: 16px 14px;
 }
 
+/* ========== 头像区域 ========== */
 .profile-avatar {
   display: flex;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .avatar-img {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #4ECDC4;
+  border: 3px solid var(--agent-primary-color, #1890FF);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
 }
 
 .avatar-placeholder {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4ECDC4, #52C7B8);
+  background: linear-gradient(135deg, #1890FF 0%, #40A9FF 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.25);
 }
 
 .profile-name {
   text-align: center;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 20px;
+  color: var(--agent-text-color, #262626);
+  margin-bottom: 16px;
 }
 
+/* ========== 信息网格 ========== */
 .info-grid {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .info-item {
   display: grid;
-  grid-template-columns: 20px 70px 1fr;
-  gap: 10px;
+  grid-template-columns: 20px 64px 1fr;
+  gap: 8px;
   align-items: center;
 }
 
 .info-item svg {
-  color: #4ECDC4;
+  color: var(--agent-primary-color, #1890FF);
+  flex-shrink: 0;
 }
 
 .info-label {
-  font-size: 13px;
-  color: #718096;
+  font-size: 12px;
+  color: var(--agent-text-tertiary, #8C8C8C);
   font-weight: 500;
 }
 
 .info-value {
-  font-size: 14px;
-  color: #2d3748;
+  font-size: 13px;
+  color: var(--agent-text-color, #262626);
   font-weight: 500;
+  word-break: break-word;
 }
 
 .country-flag {
-  font-size: 16px;
+  font-size: 15px;
   margin-right: 4px;
 }
 
+/* ========== 状态卡片 ========== */
 .status-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f7fafc;
+  border-bottom: 1px solid var(--agent-border-color-light, #F0F0F0);
 }
 
 .status-item:last-child {
   border-bottom: none;
+  padding-bottom: 0;
+}
+
+.status-item:first-child {
+  padding-top: 0;
 }
 
 .status-label {
-  font-size: 13px;
-  color: #718096;
+  font-size: 12px;
+  color: var(--agent-text-tertiary, #8C8C8C);
   font-weight: 500;
 }
 
+/* ========== 状态徽章 ========== */
 .status-badge {
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .status-badge.channel {
-  background: #e6f7f7;
-  color: #4ECDC4;
+  background: var(--agent-info-light, #E6F7FF);
+  color: var(--agent-primary-color, #1890FF);
+  border: 1px solid rgba(24, 144, 255, 0.2);
 }
 
 .status-badge.success {
-  background: #c6f6d5;
-  color: #22543d;
+  background: var(--agent-success-light, #F6FFED);
+  color: var(--agent-success, #52C41A);
+  border: 1px solid var(--agent-success-border, #B7EB8F);
 }
 
 .status-badge.warning {
-  background: #fed7d7;
-  color: #c53030;
+  background: var(--agent-danger-light, #FFF2F0);
+  color: var(--agent-danger, #FF4D4F);
+  border: 1px solid var(--agent-danger-border, #FFCCC7);
 }
 
 .status-badge.default {
-  background: #e2e8f0;
-  color: #718096;
+  background: var(--agent-body-bg, #F7F8FA);
+  color: var(--agent-text-tertiary, #8C8C8C);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
 }
 
 .status-badge.vip {
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  color: #744210;
+  background: linear-gradient(135deg, #FFF7E6 0%, #FFE7BA 100%);
+  color: #D48806;
+  border: 1px solid #FFD666;
+  box-shadow: 0 2px 4px rgba(212, 136, 6, 0.12);
 }
 </style>

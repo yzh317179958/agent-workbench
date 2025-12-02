@@ -2440,29 +2440,30 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* 整体布局优化 */
+/* ========== 整体布局 ========== */
+/* 参考拼多多商家工作台、千牛等专业客服系统 */
 .dashboard-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--agent-body-bg);
+  background: var(--agent-body-bg, #F7F8FA);
   font-size: calc(14px * var(--agent-font-scale, 1));
-  color: var(--agent-text-color);
+  color: var(--agent-text-color, #262626);
 }
 
-/* 头部样式 - 专业简约风格优化 */
+/* ========== 头部样式 - 专业简约风格 ========== */
 .dashboard-header {
-  background: #FFFFFF;
-  padding: 16px 32px;
-  border-bottom: 1px solid #E8EAED;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--agent-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
   position: relative;
   z-index: 10;
-  height: 64px;
+  height: var(--header-height, 60px);
 }
 
 .header-brand {
@@ -2475,7 +2476,6 @@ onUnmounted(() => {
 .brand-logo-img {
   height: 32px;
   width: auto;
-  /* Invert color for dark theme if needed, adjust as per logo design */
   filter: var(--agent-logo-filter, none);
 }
 
@@ -2484,19 +2484,19 @@ onUnmounted(() => {
 }
 
 .brand-text h1 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  color: #1F2937;
+  color: var(--agent-text-color, #262626);
   margin: 0;
   line-height: 1.3;
   letter-spacing: -0.3px;
 }
 
 .brand-subtitle {
-  font-size: 12px;
-  color: #9CA3AF;
+  font-size: 11px;
+  color: var(--agent-text-tertiary, #8C8C8C);
   display: block;
-  margin-top: 4px;
+  margin-top: 3px;
   font-weight: 400;
 }
 
@@ -2716,28 +2716,29 @@ onUnmounted(() => {
 .agent-work-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  color: #1F2937;
+  gap: 10px;
+  color: var(--agent-text-color, #262626);
 }
 
 .work-stat {
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
+  background: var(--agent-body-bg, #F7F8FA);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius, 6px);
   padding: 10px 12px;
   text-align: center;
   box-shadow: none;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
 .work-stat:hover {
-  background: #F3F4F6;
-  border-color: #D1D5DB;
+  background: var(--agent-hover-bg, #F3F4F6);
+  border-color: var(--agent-primary-color, #1890FF);
+  box-shadow: var(--agent-shadow-hover, 0 4px 16px rgba(24, 144, 255, 0.12));
 }
 
 .work-stat-label {
   font-size: 11px;
-  color: #6B7280;
+  color: var(--agent-text-tertiary, #8C8C8C);
   margin-bottom: 4px;
   display: block;
   font-weight: 500;
@@ -2747,7 +2748,7 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 600;
   display: block;
-  color: #111827;
+  color: var(--agent-text-color, #262626);
 }
 
 .agent-actions {
@@ -2841,57 +2842,59 @@ onUnmounted(() => {
   border-top: 1px solid var(--agent-border-color);
 }
 
+/* ========== 统计面板 ========== */
 .stats-bar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  padding: 12px 16px;
+  padding: 10px 14px;
   gap: 8px;
-  border-bottom: 1px solid var(--agent-border-color);
-  background: var(--agent-body-bg);
+  border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
 .stat-item {
   text-align: center;
   padding: 10px 6px;
-  border-radius: var(--agent-border-radius-sm, 6px);
+  border-radius: var(--agent-border-radius, 6px);
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid var(--agent-border-color);
-  background: var(--agent-secondary-bg);
-  box-shadow: var(--agent-shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05));
+  transition: all var(--transition-fast, 0.15s ease);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-secondary-bg, #FFFFFF);
+  box-shadow: var(--agent-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
 
 .stat-item:hover {
-  border-color: var(--agent-primary-color);
-  box-shadow: 0 2px 6px rgba(var(--agent-primary-color-rgb), 0.1);
+  border-color: var(--agent-primary-color, #1890FF);
+  box-shadow: var(--agent-shadow-hover, 0 4px 16px rgba(24, 144, 255, 0.12));
+  transform: translateY(-1px);
 }
 
 .stat-item.pending {
-  background: #fffbeb;
-  border-color: #fcd34d;
+  background: var(--agent-warning-light, #FFFBE6);
+  border-color: var(--agent-warning-border, #FFE58F);
 }
 
 .stat-item.live {
-  background: #ecfdf5;
-  border-color: #34d399;
+  background: var(--agent-success-light, #F6FFED);
+  border-color: var(--agent-success-border, #B7EB8F);
 }
 
 .stat-item.all {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+  background: var(--agent-body-bg, #F7F8FA);
+  border-color: var(--agent-border-color, #E8E8E8);
 }
 
 .stat-value {
   display: block;
   font-size: 20px;
   font-weight: 700;
-  color: var(--agent-text-color);
+  color: var(--agent-text-color, #262626);
   margin-bottom: 2px;
 }
 
 .stat-label {
   font-size: 10px;
-  color: var(--agent-text-light);
+  color: var(--agent-text-tertiary, #8C8C8C);
   font-weight: 500;
 }
 
