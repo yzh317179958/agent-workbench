@@ -3390,19 +3390,25 @@ onUnmounted(() => {
 }
 
 .detail-header {
-  padding: 14px 20px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--agent-border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--agent-secondary-bg);
   flex-shrink: 0;
+  min-height: 60px;
+  position: relative;
+  z-index: 10;
 }
 
 .detail-user {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+  max-width: 50%;
+  overflow: hidden;
 }
 
 .detail-user .user-avatar {
@@ -3456,18 +3462,26 @@ onUnmounted(() => {
 .detail-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
 }
 
 .action-btn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   border: 1px solid var(--agent-border-color);
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   background: var(--agent-body-bg);
   color: var(--agent-text-color);
+  line-height: 1.2;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn:hover {
@@ -3530,6 +3544,8 @@ onUnmounted(() => {
   overflow-y: auto;
   padding: 16px 20px;
   background: var(--agent-body-bg, #F7F8FA);
+  position: relative;
+  z-index: 1;
 }
 
 /* ========== 消息样式 ========== */
