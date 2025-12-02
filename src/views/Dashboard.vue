@@ -3524,17 +3524,19 @@ onUnmounted(() => {
   color: #1e40af;
 }
 
+/* ========== 聊天历史区域 ========== */
 .chat-history {
   flex: 1;
   overflow-y: auto;
   padding: 16px 20px;
-  background: var(--agent-body-bg);
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
+/* ========== 消息样式 ========== */
 .message {
   display: flex;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   align-items: flex-start;
 }
 
@@ -3548,44 +3550,47 @@ onUnmounted(() => {
 }
 
 .system-message {
-  padding: 6px 12px;
-  background: var(--agent-border-color);
-  border-radius: 12px;
+  padding: 6px 14px;
+  background: var(--agent-border-color-light, #F0F0F0);
+  border-radius: 14px;
   font-size: 11px;
-  color: var(--agent-text-light);
+  color: var(--agent-text-tertiary, #8C8C8C);
   max-width: 70%;
 }
 
+/* 消息头像 */
 .message-avatar {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   flex-shrink: 0;
   color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .message.user .message-avatar {
-  background: #a78bfa;
+  background: linear-gradient(135deg, #B37FEB 0%, #9254DE 100%);
 }
 
 .message.assistant .message-avatar {
-  background: #6ee7b7;
+  background: linear-gradient(135deg, #95DE64 0%, #52C41A 100%);
 }
 
 .message.agent .message-avatar {
-  background: #60a5fa;
+  background: linear-gradient(135deg, var(--agent-primary-hover, #40A9FF) 0%, var(--agent-primary-color, #1890FF) 100%);
 }
 
+/* 消息主体 */
 .message-body {
   max-width: 65%;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .message.user .message-body {
@@ -3603,22 +3608,24 @@ onUnmounted(() => {
 }
 
 .message-sender {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--agent-text-color);
+  color: var(--agent-text-color, #262626);
 }
 
 .message-time {
   font-size: 10px;
-  color: var(--agent-text-light);
+  color: var(--agent-text-tertiary, #8C8C8C);
 }
 
+/* 消息气泡 */
 .message-content {
-  padding: 9px 13px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
   word-break: break-word;
+  box-shadow: var(--agent-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
 
 .dashboard-container.bubble-flat .message .message-content {
@@ -3626,31 +3633,35 @@ onUnmounted(() => {
 }
 
 .dashboard-container.bubble-rounded .message .message-content {
-  border-radius: 16px;
+  border-radius: 18px;
 }
 
+/* 用户消息 - 蓝色渐变 */
 .message.user .message-content {
-  background: var(--agent-primary-color);
+  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
   color: white;
   border-bottom-right-radius: 4px;
 }
 
+/* AI助手消息 - 白色卡片 */
 .message.assistant .message-content {
-  background: var(--agent-secondary-bg);
-  color: var(--agent-text-color);
-  border: 1px solid var(--agent-border-color);
+  background: var(--agent-secondary-bg, #FFFFFF);
+  color: var(--agent-text-color, #262626);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
   border-bottom-left-radius: 4px;
 }
 
+/* 坐席消息 - 淡蓝卡片 */
 .message.agent .message-content {
-  background: #e0f2fe; /* Light blue background for agent messages */
-  color: #0c4a6e;
+  background: var(--agent-primary-light, #E6F7FF);
+  color: var(--agent-primary-dark, #0050B3);
   border-bottom-left-radius: 4px;
-  border: 1px solid #93c5fd;
+  border: 1px solid rgba(24, 144, 255, 0.2);
 }
 
+/* 深色模式适配 */
 .dashboard-container.theme-dark .message.user .message-content {
-  background: var(--agent-primary-hover);
+  background: linear-gradient(135deg, var(--agent-primary-hover, #40A9FF) 0%, var(--agent-primary-color, #1890FF) 100%);
 }
 
 .dashboard-container.theme-dark .message.assistant .message-content {
@@ -3665,11 +3676,11 @@ onUnmounted(() => {
   border-color: #3b82f6;
 }
 
-/* Chat Input Area */
+/* ========== 聊天输入区域 ========== */
 .chat-input-area {
   padding: 14px 20px;
-  border-top: 1px solid var(--agent-border-color);
-  background: var(--agent-secondary-bg);
+  border-top: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-secondary-bg, #FFFFFF);
   position: relative;
   flex-shrink: 0;
 }
@@ -3681,8 +3692,8 @@ onUnmounted(() => {
   right: 20px;
   margin-bottom: 8px;
   z-index: 10;
-  box-shadow: var(--agent-shadow);
-  border-radius: var(--agent-border-radius);
+  box-shadow: var(--agent-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.10));
+  border-radius: var(--agent-border-radius-lg, 8px);
   overflow: hidden;
   max-height: 300px;
   display: flex;
@@ -3695,31 +3706,33 @@ onUnmounted(() => {
   align-items: flex-end;
 }
 
+/* 快捷回复按钮 */
 .quick-reply-btn {
   width: 40px;
   height: 40px;
-  border: 1px solid var(--agent-border-color);
-  border-radius: var(--agent-border-radius);
-  background: var(--agent-body-bg);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius, 6px);
+  background: var(--agent-body-bg, #F7F8FA);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--transition-fast, 0.15s ease);
   flex-shrink: 0;
-  color: var(--agent-text-color);
+  color: var(--agent-text-secondary, #595959);
 }
 
 .quick-reply-btn:hover {
-  border-color: var(--agent-primary-color);
-  background: rgba(var(--agent-primary-color-rgb), 0.1);
-  color: var(--agent-primary-color);
+  border-color: var(--agent-primary-color, #1890FF);
+  background: var(--agent-primary-light, #E6F7FF);
+  color: var(--agent-primary-color, #1890FF);
 }
 
 .quick-reply-btn.active {
-  border-color: var(--agent-primary-color);
-  background: var(--agent-primary-color);
+  border-color: var(--agent-primary-color, #1890FF);
+  background: var(--agent-primary-color, #1890FF);
   color: white;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .quick-reply-btn.active .btn-icon {
@@ -3730,62 +3743,82 @@ onUnmounted(() => {
   font-size: 16px;
 }
 
+/* 消息输入框 */
 .message-input {
   flex: 1;
   padding: 10px 14px;
-  border: 1px solid var(--agent-border-color);
-  border-radius: var(--agent-border-radius);
-  font-size: 13px;
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius, 6px);
+  font-size: 14px;
   resize: none;
   min-height: 40px;
-  max-height: 100px; /* Limit max height */
+  max-height: 100px;
   font-family: inherit;
-  background: var(--agent-body-bg);
-  color: var(--agent-text-color);
+  background: var(--agent-secondary-bg, #FFFFFF);
+  color: var(--agent-text-color, #262626);
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.message-input::placeholder {
+  color: var(--agent-text-placeholder, #BFBFBF);
+}
+
+.message-input:hover {
+  border-color: var(--agent-border-color-dark, #D9D9D9);
 }
 
 .message-input:focus {
   outline: none;
-  border-color: var(--agent-primary-color);
+  border-color: var(--agent-primary-color, #1890FF);
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
 }
 
+/* 发送按钮 */
 .send-btn {
-  padding: 8px 16px;
-  background: var(--agent-primary-color);
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
   color: white;
   border: none;
-  border-radius: var(--agent-border-radius);
-  font-size: 13px;
+  border-radius: var(--agent-border-radius, 6px);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast, 0.15s ease);
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.25);
 }
 
 .send-btn:hover:not(:disabled) {
-  background: var(--agent-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.35);
+}
+
+.send-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Customer Sidebar */
+/* ========== 右侧客户边栏 ========== */
 .customer-sidebar {
-  width: 300px; /* Adjusted width */
-  background: var(--agent-secondary-bg);
-  border-left: 1px solid var(--agent-border-color);
+  width: var(--details-width, 340px);
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border-left: 1px solid var(--agent-border-color, #E8E8E8);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
 }
 
+/* 标签页导航 */
 .sidebar-tabs {
   display: flex;
-  border-bottom: 1px solid var(--agent-border-color);
-  background: var(--agent-body-bg);
+  border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
   flex-shrink: 0;
 }
 
@@ -3795,49 +3828,50 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 10px 12px;
+  padding: 12px 12px;
   border: none;
   background: transparent;
-  color: var(--agent-text-light);
+  color: var(--agent-text-tertiary, #8C8C8C);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast, 0.15s ease);
   position: relative;
 }
 
 .tab-button svg {
   width: 15px;
   height: 15px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast, 0.15s ease);
   stroke: currentColor;
 }
 
 .tab-button:hover {
-  background: rgba(var(--agent-primary-color-rgb), 0.05);
-  color: var(--agent-text-color);
+  background: rgba(24, 144, 255, 0.05);
+  color: var(--agent-text-color, #262626);
 }
 
 .tab-button.active {
-  color: var(--agent-primary-color);
-  background: var(--agent-secondary-bg);
+  color: var(--agent-primary-color, #1890FF);
+  background: var(--agent-secondary-bg, #FFFFFF);
 }
 
 .tab-button.active::after {
   content: '';
   position: absolute;
-  bottom: -1px; /* Overlap border */
+  bottom: -1px;
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--agent-primary-color);
+  background: var(--agent-primary-color, #1890FF);
 }
 
+/* 边栏内容区 */
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
-  background: var(--agent-body-bg);
-  padding: 16px;
+  background: var(--agent-body-bg, #F7F8FA);
+  padding: 14px;
 }
 
 .history-panel,

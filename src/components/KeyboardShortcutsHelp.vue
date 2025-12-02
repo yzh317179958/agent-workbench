@@ -130,93 +130,104 @@ const handleOverlayClick = (event: MouseEvent) => {
 </template>
 
 <style scoped>
+/* ========== 对话框遮罩层 ========== */
 .shortcuts-help-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: fadeIn 0.2s ease-out;
+  backdrop-filter: blur(2px);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
+/* ========== 对话框容器 ========== */
 .shortcuts-help-dialog {
-  background: white;
-  border-radius: 12px;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border-radius: var(--agent-border-radius-xl, 12px);
   width: 600px;
   max-width: 90vw;
-  max-height: 80vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease-out;
+  box-shadow: var(--agent-shadow-xl, 0 12px 32px rgba(0, 0, 0, 0.12));
+  animation: dialogSlideIn 0.25s ease-out;
+  overflow: hidden;
 }
 
-@keyframes slideUp {
+@keyframes dialogSlideIn {
   from {
-    transform: translateY(30px);
     opacity: 0;
+    transform: translateY(-20px) scale(0.96);
   }
   to {
-    transform: translateY(0);
     opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
+/* ========== 对话框头部 ========== */
 .dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
 .dialog-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--agent-text-color, #262626);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-header h2::before {
+  content: '⌨️';
+  font-size: 18px;
 }
 
 .close-btn {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #9ca3af;
-  border-radius: 4px;
-  transition: all 0.2s;
+  color: var(--agent-text-tertiary, #8C8C8C);
+  border-radius: var(--agent-border-radius, 6px);
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
 .close-btn:hover {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: var(--agent-hover-bg, #F3F4F6);
+  color: var(--agent-text-color, #262626);
 }
 
+/* ========== 对话框主体 ========== */
 .dialog-body {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 20px;
 }
 
+/* ========== 分类区域 ========== */
 .category-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  background: var(--agent-body-bg, #F7F8FA);
+  padding: 16px;
+  border-radius: var(--agent-border-radius-lg, 8px);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
 }
 
 .category-section:last-child {
@@ -224,14 +235,23 @@ const handleOverlayClick = (event: MouseEvent) => {
 }
 
 .category-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--agent-primary-color, #1890FF);
   margin: 0 0 12px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
+.category-title::before {
+  content: '•';
+  font-size: 16px;
+}
+
+/* ========== 快捷键列表 ========== */
 .shortcuts-list {
   display: flex;
   flex-direction: column;
@@ -242,58 +262,63 @@ const handleOverlayClick = (event: MouseEvent) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  background: #f9fafb;
-  border-radius: 6px;
-  transition: background 0.2s;
+  padding: 10px 14px;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border-radius: var(--agent-border-radius, 6px);
+  border: 1px solid var(--agent-border-color-light, #F0F0F0);
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
 .shortcut-item:hover {
-  background: #f3f4f6;
+  border-color: var(--agent-primary-color, #1890FF);
+  background: var(--agent-primary-light, #E6F7FF);
 }
 
 .shortcut-key {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-  font-size: 13px;
-  padding: 4px 8px;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  color: #374151;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  min-width: 120px;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 12px;
+  padding: 5px 10px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius-sm, 4px);
+  color: var(--agent-text-color, #262626);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), inset 0 1px 0 #FFFFFF;
+  min-width: 100px;
   text-align: center;
+  font-weight: 500;
 }
 
 .shortcut-description {
   font-size: 14px;
-  color: #4b5563;
+  color: var(--agent-text-secondary, #595959);
   flex: 1;
   text-align: right;
   padding-left: 16px;
 }
 
+/* ========== 对话框底部 ========== */
 .dialog-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-  border-radius: 0 0 12px 12px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
 .hint {
   margin: 0;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--agent-text-tertiary, #8C8C8C);
   text-align: center;
 }
 
 .hint kbd {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-  font-size: 12px;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 11px;
   padding: 2px 6px;
-  background: white;
-  border: 1px solid #d1d5db;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
   border-radius: 3px;
-  color: #374151;
+  color: var(--agent-text-color, #262626);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  margin: 0 2px;
 }
 </style>

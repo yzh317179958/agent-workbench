@@ -211,98 +211,122 @@ watch(() => props.visible, (visible) => {
 </script>
 
 <style scoped>
+/* ========== 对话框遮罩层 ========== */
 .dialog-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(6px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 999;
-}
-
-.dialog-container {
-  width: min(720px, 90vw);
-  max-height: 90vh;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.25);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-[data-agent-theme='dark'] .dialog-container {
-  background: #0f172a;
-  color: #f1f5f9;
-}
-
-.dialog-header {
-  padding: 20px 28px;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-  display: flex;
   align-items: center;
-  justify-content: space-between;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
-[data-agent-theme='dark'] .dialog-header {
-  border-color: rgba(148, 163, 184, 0.3);
-}
-
-.dialog-body {
-  padding: 24px 28px 12px;
-  overflow-y: auto;
-  gap: 24px;
+/* ========== 对话框容器 ========== */
+.dialog-container {
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border-radius: var(--agent-border-radius-xl, 12px);
+  width: 640px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: var(--agent-shadow-xl, 0 12px 32px rgba(0, 0, 0, 0.12));
+  animation: dialogSlideIn 0.25s ease-out;
 }
 
-.dialog-footer {
-  padding: 18px 28px;
-  border-top: 1px solid rgba(226, 232, 240, 0.6);
+@keyframes dialogSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========== 对话框头部 ========== */
+.dialog-header {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
-[data-agent-theme='dark'] .dialog-footer {
-  border-color: rgba(148, 163, 184, 0.3);
+.dialog-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--agent-text-color, #262626);
 }
 
 .close-btn {
   background: none;
   border: none;
   font-size: 24px;
-  color: inherit;
+  color: var(--agent-text-tertiary, #8C8C8C);
   cursor: pointer;
-  padding: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--agent-border-radius, 6px);
+  transition: all var(--transition-fast, 0.15s ease);
   line-height: 1;
 }
 
+.close-btn:hover {
+  background: var(--agent-hover-bg, #F3F4F6);
+  color: var(--agent-text-color, #262626);
+}
+
+/* ========== 对话框主体 ========== */
+.dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* ========== 设置分组 ========== */
 .settings-section {
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 14px;
-  padding: 16px 20px;
-  background: rgba(248, 250, 252, 0.85);
+  background: var(--agent-body-bg, #F7F8FA);
+  padding: 16px;
+  border-radius: var(--agent-border-radius-lg, 8px);
+  margin-bottom: 16px;
+  border: 1px solid var(--agent-border-color, #E8E8E8);
 }
 
-[data-agent-theme='dark'] .settings-section {
-  background: rgba(15, 23, 42, 0.6);
-  border-color: rgba(59, 130, 246, 0.2);
-}
-
-.settings-section + .settings-section {
-  margin-top: 16px;
+.settings-section:last-child {
+  margin-bottom: 0;
 }
 
 .settings-section h4 {
-  margin-bottom: 14px;
-  font-size: 16px;
+  margin: 0 0 14px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--agent-text-color, #262626);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
+.settings-section h4::before {
+  content: '⚙️';
+  font-size: 14px;
+}
+
+/* ========== 设置组 ========== */
 .setting-group {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .setting-group:last-child {
@@ -311,10 +335,13 @@ watch(() => props.visible, (visible) => {
 
 .setting-label {
   display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--agent-text-color, #262626);
 }
 
+/* ========== 选项按钮组 ========== */
 .options-row {
   display: flex;
   flex-wrap: wrap;
@@ -325,27 +352,64 @@ watch(() => props.visible, (visible) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--agent-border-color, #E8E8E8);
   cursor: pointer;
   font-size: 13px;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  color: var(--agent-text-color, #262626);
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.option-pill:hover {
+  border-color: var(--agent-primary-color, #1890FF);
+  background: var(--agent-primary-light, #E6F7FF);
+}
+
+.option-pill:has(input:checked) {
+  border-color: var(--agent-primary-color, #1890FF);
+  background: var(--agent-primary-light, #E6F7FF);
+  color: var(--agent-primary-color, #1890FF);
 }
 
 .option-pill input {
   margin: 0;
+  accent-color: var(--agent-primary-color, #1890FF);
 }
 
+/* ========== 设置项 ========== */
 .setting-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--agent-border-color-light, #F0F0F0);
 }
 
 .setting-item:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.setting-item:first-child {
+  padding-top: 0;
+}
+
+.setting-item label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--agent-text-color, #262626);
+}
+
+.setting-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--agent-primary-color, #1890FF);
 }
 
 .setting-info {
@@ -355,36 +419,71 @@ watch(() => props.visible, (visible) => {
 .setting-description {
   margin: 4px 0 0;
   font-size: 12px;
-  color: #64748b;
+  color: var(--agent-text-tertiary, #8C8C8C);
 }
 
-[data-agent-theme='dark'] .setting-description {
-  color: #94a3b8;
-}
-
+/* ========== 下拉选择框 ========== */
 select {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  background: transparent;
+  padding: 8px 12px;
+  border-radius: var(--agent-border-radius, 6px);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-secondary-bg, #FFFFFF);
   font-size: 13px;
+  color: var(--agent-text-color, #262626);
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
+select:hover {
+  border-color: var(--agent-primary-color, #1890FF);
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--agent-primary-color, #1890FF);
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+/* ========== 对话框底部 ========== */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
+}
+
+/* ========== 按钮样式 ========== */
 button {
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 600;
+  border-radius: var(--agent-border-radius, 6px);
+  padding: 8px 18px;
+  font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  color: #fff;
+  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
+  color: white;
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.25);
+}
+
+.primary-btn:hover {
+  box-shadow: 0 4px 10px rgba(24, 144, 255, 0.35);
+  transform: translateY(-1px);
 }
 
 .secondary-btn {
-  background: rgba(148, 163, 184, 0.2);
-  color: inherit;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  color: var(--agent-text-color, #262626);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+}
+
+.secondary-btn:hover {
+  border-color: var(--agent-primary-color, #1890FF);
+  color: var(--agent-primary-color, #1890FF);
 }
 </style>

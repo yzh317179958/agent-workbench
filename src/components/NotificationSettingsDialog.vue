@@ -320,77 +320,97 @@ function closeDialog() {
 </script>
 
 <style scoped>
+/* ========== 对话框遮罩层 ========== */
 .dialog-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
+/* ========== 对话框容器 ========== */
 .dialog-container {
-  background: white;
-  border-radius: 8px;
-  width: 600px;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border-radius: var(--agent-border-radius-xl, 12px);
+  width: 560px;
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: 85vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--agent-shadow-xl, 0 12px 32px rgba(0, 0, 0, 0.12));
+  animation: dialogSlideIn 0.25s ease-out;
 }
 
+@keyframes dialogSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========== 对话框头部 ========== */
 .dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
 .dialog-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--agent-text-color, #262626);
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 28px;
-  color: #6b7280;
+  font-size: 24px;
+  color: var(--agent-text-tertiary, #8C8C8C);
   cursor: pointer;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
+  border-radius: var(--agent-border-radius, 6px);
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
 .close-btn:hover {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: var(--agent-hover-bg, #F3F4F6);
+  color: var(--agent-text-color, #262626);
 }
 
+/* ========== 对话框主体 ========== */
 .dialog-body {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
 }
 
+/* ========== 权限区域 ========== */
 .permission-section {
-  background: #f9fafb;
+  background: var(--agent-body-bg, #F7F8FA);
   padding: 16px;
-  border-radius: 6px;
-  margin-bottom: 24px;
+  border-radius: var(--agent-border-radius-lg, 8px);
+  margin-bottom: 20px;
+  border: 1px solid var(--agent-border-color, #E8E8E8);
 }
 
 .permission-status {
@@ -402,71 +422,83 @@ function closeDialog() {
 
 .status-label {
   font-weight: 500;
-  color: #374151;
+  color: var(--agent-text-color, #262626);
+  font-size: 14px;
 }
 
 .status-badge {
   padding: 4px 12px;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .status-granted {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--agent-success-light, #F6FFED);
+  color: var(--agent-success, #52C41A);
+  border: 1px solid var(--agent-success-border, #B7EB8F);
 }
 
 .status-denied {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--agent-danger-light, #FFF2F0);
+  color: var(--agent-danger, #FF4D4F);
+  border: 1px solid var(--agent-danger-border, #FFCCC7);
 }
 
 .status-default {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--agent-warning-light, #FFFBE6);
+  color: var(--agent-warning, #FAAD14);
+  border: 1px solid var(--agent-warning-border, #FFE58F);
 }
 
 .permission-help {
-  margin-top: 16px;
-  padding: 12px;
-  background: #fef3c7;
-  border-left: 4px solid #f59e0b;
-  border-radius: 4px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--agent-warning-light, #FFFBE6);
+  border-left: 3px solid var(--agent-warning, #FAAD14);
+  border-radius: var(--agent-border-radius-sm, 4px);
+  font-size: 13px;
+}
+
+.permission-help.success {
+  background: var(--agent-success-light, #F6FFED);
+  border-left-color: var(--agent-success, #52C41A);
+  color: var(--agent-success, #52C41A);
 }
 
 .permission-help p {
   margin: 0 0 8px 0;
-  font-weight: 600;
+  font-weight: 500;
   color: #92400e;
 }
 
 .permission-help ol {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 18px;
   color: #78350f;
 }
 
 .permission-help li {
   margin: 4px 0;
-  font-size: 14px;
+  font-size: 13px;
 }
 
+/* ========== 设置分组 ========== */
 .settings-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .settings-section h4 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
+  margin: 0 0 14px 0;
+  font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
-  border-bottom: 2px solid #e5e7eb;
+  color: var(--agent-text-color, #262626);
+  border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
   padding-bottom: 8px;
 }
 
 .setting-item {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .setting-item label {
@@ -475,43 +507,48 @@ function closeDialog() {
   gap: 8px;
   cursor: pointer;
   font-weight: 500;
-  color: #374151;
+  color: var(--agent-text-color, #262626);
+  font-size: 14px;
 }
 
 .setting-item input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
+  accent-color: var(--agent-primary-color, #1890FF);
 }
 
 .setting-description {
-  margin: 4px 0 0 26px;
-  font-size: 13px;
-  color: #6b7280;
+  margin: 4px 0 0 24px;
+  font-size: 12px;
+  color: var(--agent-text-tertiary, #8C8C8C);
 }
 
 .volume-slider {
   width: 100%;
   margin: 8px 0;
+  accent-color: var(--agent-primary-color, #1890FF);
 }
 
 .test-sound-btn {
   margin-top: 8px;
-  padding: 6px 12px;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
+  padding: 6px 14px;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius-sm, 4px);
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-size: 13px;
+  transition: all var(--transition-fast, 0.15s ease);
+  color: var(--agent-text-color, #262626);
 }
 
 .test-sound-btn:hover {
-  background: #e5e7eb;
+  border-color: var(--agent-primary-color, #1890FF);
+  color: var(--agent-primary-color, #1890FF);
 }
 
 .quiet-mode-time {
-  margin-left: 26px;
+  margin-left: 24px;
   margin-top: 8px;
 }
 
@@ -519,55 +556,69 @@ function closeDialog() {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 13px;
 }
 
 .quiet-mode-time input[type="time"] {
-  padding: 4px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: 5px 10px;
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius-sm, 4px);
+  font-size: 13px;
+  color: var(--agent-text-color, #262626);
 }
 
+.quiet-mode-time input[type="time"]:focus {
+  outline: none;
+  border-color: var(--agent-primary-color, #1890FF);
+}
+
+/* ========== 对话框底部 ========== */
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
-  border-top: 1px solid #e5e7eb;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
 }
 
 .primary-btn,
 .secondary-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 8px 18px;
+  border-radius: var(--agent-border-radius, 6px);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast, 0.15s ease);
   border: none;
 }
 
 .primary-btn {
-  background: #3b82f6;
+  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
   color: white;
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.25);
 }
 
 .primary-btn:hover {
-  background: #2563eb;
+  box-shadow: 0 4px 10px rgba(24, 144, 255, 0.35);
+  transform: translateY(-1px);
 }
 
 .primary-btn:disabled {
-  background: #9ca3af;
+  background: var(--agent-text-placeholder, #BFBFBF);
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .secondary-btn {
-  background: white;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  color: var(--agent-text-color, #262626);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
 }
 
 .secondary-btn:hover {
-  background: #f9fafb;
+  border-color: var(--agent-primary-color, #1890FF);
+  color: var(--agent-primary-color, #1890FF);
 }
 </style>
