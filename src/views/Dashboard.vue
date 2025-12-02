@@ -1575,6 +1575,14 @@ onUnmounted(() => {
             </svg>
             快捷回复
           </button>
+          <button @click="router.push('/tickets')" class="ticket-center-button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="7" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 7V5a2 2 0 0 1 2-2h6v4"></path>
+              <line x1="9" y1="12" x2="15" y2="12"></line>
+            </svg>
+            工单中心
+          </button>
           <button @click="openTransferRequestsPanel" class="transfer-requests-button">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="7" width="18" height="11" rx="2" ry="2"></rect>

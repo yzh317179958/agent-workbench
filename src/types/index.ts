@@ -178,6 +178,16 @@ export type AgentRole = 'admin' | 'agent'
 /** 坐席状态 */
 export type AgentStatus = 'online' | 'busy' | 'break' | 'lunch' | 'training' | 'offline'
 
+/** 坐席技能等级 */
+export type AgentSkillLevel = 'junior' | 'intermediate' | 'senior'
+
+/** 坐席技能信息 */
+export interface AgentSkill {
+  category: string
+  level: AgentSkillLevel
+  tags: string[]
+}
+
 /** 坐席工作状态详情 */
 export interface AgentStatusDetails {
   status: AgentStatus
@@ -208,6 +218,7 @@ export interface Agent {
   created_at: number
   last_login: number
   avatar_url?: string
+  skills: AgentSkill[]
 }
 
 /** 创建坐席请求 */
@@ -325,4 +336,259 @@ export interface QueueResponse {
     avg_wait_time: number
     max_wait_time: number
   }
+}
+
+// ====================
+// 工单系统类型定义 (L1-2-Part1)
+// ====================
+
+export type TicketStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'waiting_customer'
+  | 'waiting_vendor'
+  | 'resolved'
+  | 'closed'
+  | 'archived'
+
+export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+export type TicketType = 'pre_sale' | 'after_sale' | 'complaint'
+
+export interface TicketCustomerInfo {
+  name?: string | null
+  email?: string | null
+  phone?: string | null
+  country?: string | null
+}
+
+export interface TicketStatusHistory {
+  history_id: string
+  from_status: TicketStatus | null
+  to_status: TicketStatus
+  changed_by: string
+  change_reason?: string | null
+  comment?: string | null
+  changed_at: number
+}
+
+export interface TicketAssignmentRecord {
+  agent_id?: string | null
+  agent_name?: string | null
+  assigned_by?: string | null
+  note?: string | null
+  assigned_at: number
+}
+
+export type TicketCommentType = 'internal' | 'public'
+
+export interface TicketComment {
+  comment_id: string
+  content: string
+  author_id: string
+  author_name?: string | null
+  comment_type: TicketCommentType
+  created_at: number
+}
+
+export interface Ticket {
+  ticket_id: string
+  title: string
+  description: string
+  session_name?: string | null
+  ticket_type: TicketType
+  status: TicketStatus
+  priority: TicketPriority
+  created_by: string
+  created_by_name?: string | null
+  assigned_agent_id?: string | null
+  assigned_agent_name?: string | null
+  customer?: TicketCustomerInfo | null
+  metadata: Record<string, any>
+  history: TicketStatusHistory[]
+  closed_at?: number | null
+  archived_at?: number | null
+  reopened_count: number
+  reopened_at?: number | null
+  reopened_by?: string | null
+  first_response_at?: number | null
+  resolved_at?: number | null
+  assignments: TicketAssignmentRecord[]
+  comments: TicketComment[]
+  created_at: number
+  updated_at: number
+}
+
+export interface TicketListResponse {
+  success: boolean
+  data: {
+    tickets: Ticket[]
+    total: number
+    limit: number
+    offset: number
+    has_more: boolean
+  }
+}
+
+export interface TicketListFilters {
+  status?: TicketStatus
+  priority?: TicketPriority
+  assigned_agent_id?: string
+  limit?: number
+  offset?: number
+}
+
+export interface SmartAssignPayload {
+  ticket_type: TicketType
+  priority: TicketPriority
+  customer_email?: string
+  customer_country?: string
+  category?: string
+  keywords?: string[]
+  tags?: string[]
+}
+
+export interface SmartAssignRecommendation {
+  agent_id: string
+  agent_name: string
+  matched_tags: string[]
+  manual_sessions: number
+  pending_sessions: number
+  load_score: number
+  reason: string
+}
+
+export interface BatchAssignRequest {
+  ticket_ids: string[]
+  target_agent_id: string
+  target_agent_name?: string
+  note?: string
+}
+
+export interface BatchAssignResult {
+  succeeded: number
+  failed: Array<{ ticket_id: string; error: string }>
+  tickets: Ticket[]
+}
+
+export interface BatchCloseRequest {
+  ticket_ids: string[]
+  close_reason?: string
+  comment?: string
+}
+
+export interface BatchCloseResult {
+  succeeded: number
+  failed: Array<{ ticket_id: string; error: string }>
+  tickets: Ticket[]
+}
+
+export interface BatchPriorityRequest {
+  ticket_ids: string[]
+  priority: TicketPriority
+  reason?: string
+}
+
+export interface BatchPriorityResult {
+  succeeded: number
+  failed: Array<{ ticket_id: string; error: string }>
+  tickets: Ticket[]
+}
+
+export interface CreateManualTicketPayload {
+  title: string
+  description: string
+  ticket_type: TicketType
+  priority: TicketPriority
+  customer: TicketCustomerInfo
+  assigned_agent_id?: string
+  assigned_agent_name?: string
+  metadata?: Record<string, any>
+}
+
+export interface UpdateTicketPayload {
+  status?: TicketStatus
+  priority?: TicketPriority
+  assigned_agent_id?: string | null
+  assigned_agent_name?: string | null
+  note?: string
+  metadata_updates?: Record<string, any>
+  change_reason?: string
+}
+
+export interface AssignTicketPayload {
+  agent_id: string
+  agent_name?: string
+  note?: string
+}
+
+export interface TicketCommentPayload {
+  content: string
+  comment_type?: TicketCommentType
+  notify_agent_id?: string
+}
+
+export interface ReopenTicketPayload {
+  reason: string
+  comment?: string
+}
+
+export interface ArchiveTicketPayload {
+  reason?: string
+}
+
+export type TicketSortField =
+  | "updated_at"
+  | "created_at"
+  | "priority"
+  | "status"
+  | "resolved_at"
+  | "first_response_at"
+  | "reopened_at"
+
+export interface TicketFilterPayload {
+  statuses?: TicketStatus[]
+  priorities?: TicketPriority[]
+  ticket_types?: TicketType[]
+  assigned?: string
+  assigned_agent_ids?: string[]
+  keyword?: string
+  tags?: string[]
+  categories?: string[]
+  created_start?: number
+  created_end?: number
+  updated_start?: number
+  updated_end?: number
+  limit?: number
+  offset?: number
+  sort_by?: TicketSortField
+  sort_desc?: boolean
+}
+
+export interface TicketSlaSummary {
+  total_tickets: number
+  open_tickets: number
+  pending_tickets: number
+  first_response_count: number
+  avg_first_response_seconds?: number | null
+  resolution_count: number
+  avg_resolution_seconds?: number | null
+}
+
+export interface TicketSlaAlert {
+  ticket_id: string
+  elapsed_seconds: number
+  priority: TicketPriority
+}
+
+export interface TicketSlaAlerts {
+  first_response_alerts: TicketSlaAlert[]
+  resolution_alerts: TicketSlaAlert[]
+}
+
+export type TicketExportFormat = 'csv' | 'xlsx' | 'pdf'
+
+export interface TicketExportRequest {
+  format: TicketExportFormat
+  filters?: TicketFilterPayload
 }

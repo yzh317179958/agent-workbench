@@ -106,8 +106,8 @@ class Particle {
       const forceDirectionX = dx / distance
       const forceDirectionY = dy / distance
       const force = (MOUSE_REPULSION_RADIUS - distance) / MOUSE_REPULSION_RADIUS
-      const directionX = forceDirectionX * force * this.density
-      const directionY = forceDirectionY * force * this.density
+      const directionX = forceDirectionX * force * this.density * MOUSE_REPULSION_FORCE
+      const directionY = forceDirectionY * force * this.density * MOUSE_REPULSION_FORCE
 
       // 粒子被推开
       this.x -= directionX
@@ -144,13 +144,15 @@ function animate() {
   ctx.clearRect(0, 0, width, height)
 
   for (let i = 0; i < particles.length; i++) {
-    let p = particles[i]
+    const p = particles[i]
+    if (!p) continue
     p.update(width, height)
     p.draw()
 
     // 粒子连线逻辑
     for (let j = i; j < particles.length; j++) {
       const p2 = particles[j]
+      if (!p2) continue
       const dx = p.x - p2.x
       const dy = p.y - p2.y
       const distance = Math.sqrt(dx * dx + dy * dy)

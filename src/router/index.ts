@@ -11,6 +11,19 @@ const router = createRouter({
       component: () => import('@/views/Login.vue'),
       meta: { requiresAuth: false }
     },
+    // ⭐ L1-2-Part1: 工单管理
+    {
+      path: '/tickets',
+      name: 'TicketManagement',
+      component: () => import('@/views/TicketManagement.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/tickets/:ticketId',
+      name: 'TicketDetail',
+      component: () => import('@/views/TicketDetail.vue'),
+      meta: { requiresAuth: true }
+    },
     {
       path: '/dashboard',
       name: 'Dashboard',
