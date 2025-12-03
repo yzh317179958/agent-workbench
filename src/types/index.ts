@@ -9,6 +9,41 @@ export interface LoginRequest {
   agentName: string
 }
 
+// ====================
+// 模板系统类型定义
+// ====================
+
+export interface TicketTemplate {
+  id: string
+  name: string
+  ticket_type: TicketType
+  category: string
+  priority: TicketPriority
+  title_template: string
+  description_template: string
+  created_by: string
+  created_at: number
+  updated_at: number
+}
+
+export interface TicketTemplatePayload {
+  name: string
+  ticket_type: TicketType
+  category: string
+  priority: TicketPriority
+  title_template: string
+  description_template: string
+}
+
+export interface RenderTemplateRequest {
+  customer_name?: string
+}
+
+export interface RenderTemplateResponse {
+  title: string
+  description: string
+}
+
 // Session 相关类型
 export type SessionStatus = 'bot_active' | 'pending_manual' | 'manual_live' | 'after_hours_email' | 'closed'
 
@@ -389,6 +424,7 @@ export interface TicketComment {
   author_name?: string | null
   comment_type: TicketCommentType
   created_at: number
+  mentions?: string[]
 }
 
 export interface Ticket {
@@ -526,6 +562,7 @@ export interface TicketCommentPayload {
   content: string
   comment_type?: TicketCommentType
   notify_agent_id?: string
+  mentions?: string[]
 }
 
 export interface ReopenTicketPayload {

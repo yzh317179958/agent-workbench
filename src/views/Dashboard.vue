@@ -13,7 +13,13 @@ import PersonalizationSettingsDialog from '@/components/PersonalizationSettingsD
 import type {
   SessionStatus,
   CustomerProfile as CustomerProfileType,
-  AgentStatusDetails
+  AgentStatusDetails,
+  SmartAssignRecommendation,
+  SmartAssignPayload,
+  TicketPriority,
+  TicketType,
+  Message,
+  SessionDetail
 } from '@/types'
 import { useAgentWorkbenchSSE } from '@/composables/useAgentWorkbenchSSE'
 import { useKeyboardShortcuts, type KeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
@@ -23,6 +29,7 @@ import axios from 'axios'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useTransferStore } from '@/stores/transferStore'
 import { useAssistRequestStore } from '@/stores/assistRequestStore'
+import { requestSmartAssignment } from '@/api/tickets'
 
 const agentStore = useAgentStore()
 const sessionStore = useSessionStore()
@@ -55,16 +62,22 @@ const currentTab = ref<'chat' | 'customer' | 'history' | 'notes'>('chat')  // �
 const internalNotes = ref<any[]>([])
 const loadingNotes = ref(false)
 const newNoteContent = ref('')
+const newNoteMentions = ref<string[]>([])
 const addingNote = ref(false)
 const editingNoteId = ref<string | null>(null)
 const editingNoteContent = ref('')
+const editingNoteMentions = ref<string[]>([])
+const showMentionSelector = ref(false)
+const mentionSearchKeyword = ref('')
+const showEditingMentionSelector = ref(false)
+const editingMentionSearchKeyword = ref('')
 
 // 【模块6】快捷键帮助面板
 const showShortcutsHelp = ref(false)
 
 // 【模块6.2.2】消息提醒系统
 const showNotificationSettings = ref(false)
-const { unreadCount } = useNotification()
+const { unreadCount, startAgentEventStream, stopAgentEventStream } = useNotification()
 const showPersonalizationSettings = ref(false)
 
 // 【模块6.2.4】个性化设置状态
@@ -187,6 +200,7 @@ watch([customTimeStart, customTimeEnd], () => {
     applyAdvancedFilter()
   }
 })
+
 
 // 监听搜索关键词变化（防抖500ms）
 let searchDebounce: ReturnType<typeof setTimeout> | null = null
@@ -390,6 +404,34 @@ watch(selectedTransferReasonPreset, (presetId) => {
   }
 })
 
+watch(showTransferDialog, (visible) => {
+  if (!visible) {
+    resetTransferRecommendation()
+  }
+})
+
+watch(
+  () => sessionStore.currentSession?.session_name,
+  () => {
+    if (showTransferDialog.value) {
+      resetTransferRecommendation()
+      fetchTransferRecommendation().catch((error) => {
+        console.warn('⚠️ 获取转接推荐失败:', error)
+      })
+    } else {
+      resetTransferRecommendation()
+    }
+  }
+)
+
+const transferRecommendation = ref<SmartAssignRecommendation | null>(null)
+const transferRecommendationLoading = ref(false)
+const transferRecommendationError = ref<string | null>(null)
+const recommendedAgentInfo = computed(() => {
+  if (!transferRecommendation.value) return null
+  return availableAgents.value.find(agent => agent.id === transferRecommendation.value?.agent_id) || null
+})
+
 const showTransferRequestsPanel = ref(false)
 const respondingTransferRequestId = ref<string | null>(null)
 const transferResponseNotes = reactive<Record<string, string>>({})
@@ -461,6 +503,146 @@ const assistRequestOptions = computed(() =>
     status: agent.status
   }))
 )
+
+const mentionCandidates = computed(() => {
+  const map = new Map<string, { username: string; name: string; status: string }>()
+  availableAgents.value.forEach(agent => {
+    map.set(agent.username, {
+      username: agent.username,
+      name: agent.name || agent.username,
+      status: agent.status
+    })
+  })
+  if (agentStore.agentId) {
+    map.set(agentStore.agentId, {
+      username: agentStore.agentId,
+      name: agentStore.agentName || agentStore.agentId,
+      status: 'online'
+    })
+  }
+  return Array.from(map.values())
+})
+
+const mentionLabelMap = computed(() => {
+  const map: Record<string, string> = {}
+  mentionCandidates.value.forEach(candidate => {
+    map[candidate.username] = candidate.name
+  })
+  return map
+})
+
+const filteredMentionCandidates = computed(() => {
+  const keyword = mentionSearchKeyword.value.trim().toLowerCase()
+  if (!keyword) {
+    return mentionCandidates.value
+  }
+  return mentionCandidates.value.filter(candidate =>
+    candidate.name.toLowerCase().includes(keyword) ||
+    candidate.username.toLowerCase().includes(keyword)
+  )
+})
+
+const filteredEditingMentionCandidates = computed(() => {
+  const keyword = editingMentionSearchKeyword.value.trim().toLowerCase()
+  if (!keyword) {
+    return mentionCandidates.value
+  }
+  return mentionCandidates.value.filter(candidate =>
+    candidate.name.toLowerCase().includes(keyword) ||
+    candidate.username.toLowerCase().includes(keyword)
+  )
+})
+
+const getMentionLabel = (username: string) => mentionLabelMap.value[username] || username
+
+const removeNewMention = (username: string) => {
+  newNoteMentions.value = newNoteMentions.value.filter(item => item !== username)
+}
+
+const removeEditingMention = (username: string) => {
+  editingNoteMentions.value = editingNoteMentions.value.filter(item => item !== username)
+}
+
+const resetTransferRecommendation = () => {
+  transferRecommendation.value = null
+  transferRecommendationError.value = null
+  transferRecommendationLoading.value = false
+}
+
+const deriveTicketTypeFromReason = (reason?: string | null): TicketType => {
+  if (!reason) return 'after_sale'
+  const normalized = reason.toLowerCase()
+  if (normalized.includes('售前') || normalized.includes('预售') || normalized.includes('pre')) {
+    return 'pre_sale'
+  }
+  if (normalized.includes('投诉') || normalized.includes('质量') || normalized.includes('refund')) {
+    return 'complaint'
+  }
+  return 'after_sale'
+}
+
+const derivePriorityFromSession = (session: SessionDetail | null): TicketPriority => {
+  if (!session) return 'medium'
+  const severity = session.escalation?.severity?.toLowerCase()
+  if (severity === 'critical' || severity === 'urgent') return 'urgent'
+  if (severity === 'high') return 'high'
+  if (session.user_profile?.vip) return 'high'
+  return 'medium'
+}
+
+const extractSessionKeywords = (session: SessionDetail | null, limit = 8): string[] => {
+  if (!session) return []
+  const historyTexts = session.history
+    .filter((msg: Message) => msg.role === 'user')
+    .slice(-5)
+    .map(msg => msg.content || '')
+  const combined = `${session.escalation?.reason || ''} ${historyTexts.join(' ')}`
+  const tokens = combined
+    .toLowerCase()
+    .split(/[\s,.;，。\\/!?？]+/)
+    .map(token => token.trim())
+    .filter(token => token.length >= 2)
+  return Array.from(new Set(tokens)).slice(0, limit)
+}
+
+const buildTransferSmartPayload = (session: SessionDetail | null): SmartAssignPayload | null => {
+  if (!session) return null
+  const reason = session.escalation?.reason?.trim()
+  return {
+    ticket_type: deriveTicketTypeFromReason(reason),
+    priority: derivePriorityFromSession(session),
+    category: reason || undefined,
+    keywords: extractSessionKeywords(session)
+  }
+}
+
+const fetchTransferRecommendation = async () => {
+  const payload = buildTransferSmartPayload(sessionStore.currentSession)
+  if (!payload) {
+    transferRecommendation.value = null
+    transferRecommendationError.value = '当前会话缺少必要信息，无法推荐坐席'
+    return
+  }
+  transferRecommendationLoading.value = true
+  transferRecommendationError.value = null
+  try {
+    transferRecommendation.value = await requestSmartAssignment(payload)
+  } catch (error: any) {
+    transferRecommendation.value = null
+    transferRecommendationError.value = error?.message || '暂时无法获取推荐坐席'
+  } finally {
+    transferRecommendationLoading.value = false
+  }
+}
+
+const applyTransferRecommendation = () => {
+  if (!transferRecommendation.value) return
+  transferTargetId.value = transferRecommendation.value.agent_id
+  const match = recommendedAgentInfo.value
+  if (!match) {
+    alert('推荐坐席当前不在在线列表，仍可继续提交转接请求')
+  }
+}
 
 // 处理快捷短语选择
 const handleQuickReplySelect = (content: string) => {
@@ -803,7 +985,7 @@ const handleAddNote = async () => {
       `${API_BASE}/api/sessions/${sessionStore.currentSession.session_name}/notes`,
       {
         content: newNoteContent.value.trim(),
-        mentions: []  // TODO: @提醒功能
+        mentions: newNoteMentions.value
       },
       {
         headers: {
@@ -814,6 +996,9 @@ const handleAddNote = async () => {
 
     if (response.data.success) {
       newNoteContent.value = ''
+      newNoteMentions.value = []
+      showMentionSelector.value = false
+      mentionSearchKeyword.value = ''
       // 重新加载备注列表
       await fetchInternalNotes(sessionStore.currentSession.session_name)
     }
@@ -826,9 +1011,12 @@ const handleAddNote = async () => {
 }
 
 // 【模块5】编辑内部备注
-const handleEditNote = (noteId: string, content: string) => {
+const handleEditNote = (noteId: string, content: string, noteMentions: string[] = []) => {
   editingNoteId.value = noteId
   editingNoteContent.value = content
+  editingNoteMentions.value = [...noteMentions]
+  showEditingMentionSelector.value = false
+  editingMentionSearchKeyword.value = ''
 }
 
 // 【模块5】保存编辑的备注
@@ -843,7 +1031,7 @@ const handleSaveEditNote = async (noteId: string) => {
       `${API_BASE}/api/sessions/${sessionStore.currentSession.session_name}/notes/${noteId}`,
       {
         content: editingNoteContent.value.trim(),
-        mentions: []
+        mentions: editingNoteMentions.value
       },
       {
         headers: {
@@ -855,6 +1043,9 @@ const handleSaveEditNote = async (noteId: string) => {
     if (response.data.success) {
       editingNoteId.value = null
       editingNoteContent.value = ''
+      editingNoteMentions.value = []
+      showEditingMentionSelector.value = false
+      editingMentionSearchKeyword.value = ''
       // 重新加载备注列表
       await fetchInternalNotes(sessionStore.currentSession.session_name)
     }
@@ -868,6 +1059,9 @@ const handleSaveEditNote = async (noteId: string) => {
 const handleCancelEdit = () => {
   editingNoteId.value = null
   editingNoteContent.value = ''
+  editingNoteMentions.value = []
+  showEditingMentionSelector.value = false
+  editingMentionSearchKeyword.value = ''
 }
 
 // 【模块5】删除内部备注
@@ -1199,8 +1393,17 @@ const fetchAvailableAgents = async () => {
   }
 }
 
+watch(currentTab, (tab) => {
+  if (tab === 'notes' && availableAgents.value.length === 0) {
+    fetchAvailableAgents().catch((error) => {
+      console.warn('⚠️ 加载坐席列表失败:', error)
+    })
+  }
+})
+
 // 打开转接对话框
 const openTransferDialog = async () => {
+  resetTransferRecommendation()
   // 先获取最新的坐席列表
   await fetchAvailableAgents()
 
@@ -1215,6 +1418,11 @@ const openTransferDialog = async () => {
   selectedTransferReasonPreset.value = transferReasonPresets[0]?.id || 'custom'
   transferNote.value = ''
   showTransferDialog.value = true
+  if (sessionStore.currentSession) {
+    fetchTransferRecommendation().catch((error) => {
+      console.warn('⚠️ 获取智能推荐失败:', error)
+    })
+  }
 }
 
 // 打开协助请求对话框
@@ -1386,6 +1594,7 @@ onMounted(async () => {
   document.addEventListener('click', handleDocumentClick)
   // 【阶段2】使用 SSE 实时监听替代轮询
   await startMonitoring()
+  startAgentEventStream()
   await fetchAgentStatus()
   await sendHeartbeat()
   statusPollTimer = setInterval(fetchAgentStatus, 60000)
@@ -1425,6 +1634,7 @@ onMounted(async () => {
 onUnmounted(() => {
   // 【阶段2】停止 SSE 监听
   stopMonitoring()
+  stopAgentEventStream()
   if (statusPollTimer) {
     clearInterval(statusPollTimer)
     statusPollTimer = null
@@ -1582,6 +1792,14 @@ onUnmounted(() => {
               <line x1="9" y1="12" x2="15" y2="12"></line>
             </svg>
             工单中心
+          </button>
+          <!-- SLA监控按钮 (v3.7.1+) -->
+          <button @click="router.push('/sla')" class="sla-dashboard-button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            SLA监控
           </button>
           <button @click="openTransferRequestsPanel" class="transfer-requests-button">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2090,9 +2308,18 @@ onUnmounted(() => {
                       </div>
                       <div class="note-time">{{ formatNoteTime(note.created_at) }}</div>
                     </div>
-                    <div class="note-content" v-if="editingNoteId !== note.id">
-                      {{ note.content }}
-                    </div>
+                      <div class="note-content" v-if="editingNoteId !== note.id">
+                        {{ note.content }}
+                        <div v-if="note.mentions && note.mentions.length" class="note-mentions">
+                          <span
+                            v-for="mention in note.mentions"
+                            :key="mention"
+                            class="mention-chip"
+                          >
+                            @{{ getMentionLabel(mention) }}
+                          </span>
+                        </div>
+                      </div>
                     <div class="note-edit" v-else>
                       <textarea
                         v-model="editingNoteContent"
@@ -2100,13 +2327,63 @@ onUnmounted(() => {
                         rows="3"
                         placeholder="编辑备注内容..."
                       ></textarea>
+                      <div class="mention-selector">
+                        <div class="selector-header">
+                          <span>提醒同事</span>
+                          <button
+                            type="button"
+                            class="btn-text"
+                            @click="showEditingMentionSelector = !showEditingMentionSelector"
+                          >
+                            {{ showEditingMentionSelector ? '收起列表' : '选择@对象' }}
+                          </button>
+                        </div>
+                        <div class="selected-mentions" v-if="editingNoteMentions.length">
+                          <span
+                            v-for="mention in editingNoteMentions"
+                            :key="mention"
+                            class="mention-chip removable"
+                          >
+                            @{{ getMentionLabel(mention) }}
+                            <button type="button" class="remove-chip" @click="removeEditingMention(mention)">
+                              ×
+                            </button>
+                          </span>
+                        </div>
+                        <div v-if="showEditingMentionSelector" class="mention-options">
+                          <input
+                            v-model="editingMentionSearchKeyword"
+                            class="mention-search"
+                            type="text"
+                            placeholder="搜索坐席姓名或ID"
+                          />
+                          <div
+                            v-for="candidate in filteredEditingMentionCandidates"
+                            :key="candidate.username"
+                            class="mention-option"
+                          >
+                            <label>
+                              <input
+                                type="checkbox"
+                                :value="candidate.username"
+                                v-model="editingNoteMentions"
+                              />
+                              <span class="name">{{ candidate.name }}</span>
+                              <span class="id">@{{ candidate.username }}</span>
+                            </label>
+                          </div>
+                          <div v-if="!filteredEditingMentionCandidates.length" class="no-mention-result">
+                            暂无匹配坐席
+                          </div>
+                        </div>
+                      </div>
                       <div class="note-edit-actions">
                         <button @click="handleCancelEdit" class="btn btn-cancel">取消</button>
                         <button @click="handleSaveEditNote(note.id)" class="btn btn-confirm">保存</button>
                       </div>
                     </div>
                     <div class="note-actions" v-if="editingNoteId !== note.id">
-                      <button @click="handleEditNote(note.id, note.content)" class="btn-text">编辑</button>
+                      <button @click="handleEditNote(note.id, note.content, note.mentions)" class="btn-text">编辑</button>
                       <button @click="handleDeleteNote(note.id)" class="btn-text text-danger">删除</button>
                     </div>
                   </div>
@@ -2122,6 +2399,54 @@ onUnmounted(() => {
                   placeholder="添加内部备注（仅坐席可见）..."
                   :disabled="addingNote"
                 ></textarea>
+                <div class="mention-selector">
+                  <div class="selector-header">
+                    <span>提醒同事</span>
+                    <button
+                      type="button"
+                      class="btn-text"
+                      @click="showMentionSelector = !showMentionSelector"
+                    >
+                      {{ showMentionSelector ? '收起列表' : '选择@对象' }}
+                    </button>
+                  </div>
+                  <div class="selected-mentions" v-if="newNoteMentions.length">
+                    <span
+                      v-for="mention in newNoteMentions"
+                      :key="mention"
+                      class="mention-chip removable"
+                    >
+                      @{{ getMentionLabel(mention) }}
+                      <button type="button" class="remove-chip" @click="removeNewMention(mention)">×</button>
+                    </span>
+                  </div>
+                  <div v-if="showMentionSelector" class="mention-options">
+                    <input
+                      v-model="mentionSearchKeyword"
+                      class="mention-search"
+                      type="text"
+                      placeholder="搜索坐席姓名或ID"
+                    />
+                    <div
+                      v-for="candidate in filteredMentionCandidates"
+                      :key="candidate.username"
+                      class="mention-option"
+                    >
+                      <label>
+                        <input
+                          type="checkbox"
+                          :value="candidate.username"
+                          v-model="newNoteMentions"
+                        />
+                        <span class="name">{{ candidate.name }}</span>
+                        <span class="id">@{{ candidate.username }}</span>
+                      </label>
+                    </div>
+                    <div v-if="!filteredMentionCandidates.length" class="no-mention-result">
+                      暂无匹配坐席
+                    </div>
+                  </div>
+                </div>
                 <div class="add-note-actions">
                   <button
                     @click="handleAddNote"
@@ -2302,6 +2627,61 @@ onUnmounted(() => {
                 {{ agent.name }} - {{ getStatusLabel(agent.status) }} ({{ getRoleLabel(agent.role) }})
               </option>
             </select>
+          </div>
+          <div
+            v-if="transferRecommendationLoading || transferRecommendation || transferRecommendationError"
+            class="smart-recommendation"
+          >
+            <div v-if="transferRecommendationLoading" class="smart-recommendation__loading">
+              <div class="spinner"></div>
+              <span>智能分析中，正在为您匹配最合适的坐席...</span>
+            </div>
+            <div v-else-if="transferRecommendation" class="smart-recommendation__card">
+              <div class="smart-recommendation__header">
+                <div>
+                  <div class="smart-recommendation__title">
+                    推荐坐席：<strong>{{ transferRecommendation.agent_name }}</strong>
+                  </div>
+                  <p class="smart-recommendation__sub">
+                    当前状态：
+                    <span v-if="recommendedAgentInfo">
+                      {{ getStatusLabel(recommendedAgentInfo.status) }}
+                    </span>
+                    <span v-else>暂未在线，仍可发送转接请求</span>
+                  </p>
+                </div>
+                <button type="button" class="btn-text" @click="fetchTransferRecommendation">
+                  重新计算
+                </button>
+              </div>
+              <p class="smart-recommendation__reason">
+                {{ transferRecommendation.reason }}
+              </p>
+              <div
+                v-if="transferRecommendation.matched_tags && transferRecommendation.matched_tags.length"
+                class="recommendation-tags"
+              >
+                <span v-for="tag in transferRecommendation.matched_tags" :key="tag" class="tag-chip">
+                  #{{ tag }}
+                </span>
+              </div>
+              <button
+                type="button"
+                class="btn-link"
+                @click="applyTransferRecommendation"
+              >
+                {{ recommendedAgentInfo ? '一键选择该坐席' : '仍然使用推荐坐席' }}
+              </button>
+            </div>
+            <div v-else class="smart-recommendation__error">
+              <div>
+                <strong>智能推荐暂不可用</strong>
+                <p>{{ transferRecommendationError }}</p>
+              </div>
+              <button type="button" class="btn-text" @click="fetchTransferRecommendation">
+                重试
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>转接类型</label>
@@ -3861,6 +4241,8 @@ onUnmounted(() => {
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
+  position: relative;
+  z-index: 5;
 }
 
 /* 标签页导航 */
@@ -3869,6 +4251,8 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
   background: var(--agent-body-bg, #F7F8FA);
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .tab-button {
@@ -3921,6 +4305,8 @@ onUnmounted(() => {
   overflow-y: auto;
   background: var(--agent-body-bg, #F7F8FA);
   padding: 14px;
+  position: relative;
+  z-index: 1;
 }
 
 .history-panel,
@@ -3958,6 +4344,102 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 10px;
   padding-bottom: 16px; /* Add some padding at the bottom */
+}
+
+.note-mentions {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mention-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #eef2ff;
+  color: #4338ca;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.mention-chip.removable {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.mention-chip .remove-chip {
+  margin-left: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  font-size: 12px;
+}
+
+.mention-selector {
+  margin-top: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mention-selector .selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+}
+
+.mention-selector .selected-mentions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mention-options {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mention-option label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.mention-option .id {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.mention-search {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #cbd5f5;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.no-mention-result {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 8px 0;
 }
 
 .no-history svg,
@@ -4513,6 +4995,71 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.smart-recommendation {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.smart-recommendation__loading,
+.smart-recommendation__error {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.smart-recommendation__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.smart-recommendation__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.smart-recommendation__title {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.smart-recommendation__sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.smart-recommendation__reason {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.recommendation-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-chip {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
 }
 
 .empty-transfer-requests,

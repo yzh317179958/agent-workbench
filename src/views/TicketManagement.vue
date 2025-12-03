@@ -199,11 +199,24 @@ const totalCount = computed(() => {
   return ticketStore.total
 })
 
+const hasMentionForTicket = (ticket: Ticket) => {
+  if (!ticket || !agentStore.agentId) return false
+  if (!ticket.comments || !ticket.comments.length) return false
+  return ticket.comments.some(comment => {
+    if (!comment.mentions || !comment.mentions.length) return false
+    return comment.mentions.includes(agentStore.agentId as string)
+  })
+}
+
+const ticketRowClass = ({ row }: { row: Ticket }) => {
+  return hasMentionForTicket(row) ? 'row-has-mention' : ''
+}
+
 const hasTickets = computed(() => filteredTicketsWithFallback.value.length > 0)
 const hasSelectedTickets = computed(() => selectedTicketIds.value.length > 0)
-const selectedTickets = computed(() =>
-  ticketStore.tickets.filter(ticket => selectedTicketIds.value.includes(ticket.ticket_id))
-)
+const selectedTickets = computed((): Ticket[] => {
+  return ticketStore.tickets.filter(ticket => selectedTicketIds.value.includes(ticket.ticket_id))
+})
 const hasNonResolvedSelected = computed(() =>
   selectedTickets.value.some(ticket => ticket.status !== 'resolved')
 )
@@ -213,7 +226,7 @@ const dominantPriority = computed<TicketPriority | null>(() => {
   }
   const first = selectedTickets.value[0]?.priority
   if (selectedTickets.value.every(ticket => ticket.priority === first)) {
-    return first
+    return first ?? null
   }
   return null
 })
@@ -708,6 +721,9 @@ onMounted(async () => {
         </div>
       </div>
       <div class="header-actions">
+        <el-button @click="router.push('/templates')">
+          模板管理
+        </el-button>
         <el-button @click="openExportDialog" :disabled="!hasTickets && !ticketStore.listLoading">
           导出
         </el-button>
@@ -891,12 +907,24 @@ onMounted(async () => {
         :empty-text="ticketStore.listLoading ? '加载中...' : '暂无数据'"
         @selection-change="handleSelectionChange"
         row-key="ticket_id"
+        :row-class-name="ticketRowClass"
       >
         <el-table-column type="selection" width="55" />
         <el-table-column prop="ticket_id" label="工单号" width="210" />
         <el-table-column label="主题 / 描述" min-width="260">
           <template #default="{ row }">
-            <div class="ticket-title">{{ row.title }}</div>
+            <div class="ticket-title">
+              <span>{{ row.title }}</span>
+              <el-tag
+                v-if="hasMentionForTicket(row)"
+                size="small"
+                type="danger"
+                effect="dark"
+                class="mention-flag"
+              >
+                @提醒
+              </el-tag>
+            </div>
             <div class="ticket-description">{{ row.description }}</div>
           </template>
         </el-table-column>
@@ -1311,6 +1339,21 @@ onMounted(async () => {
 .ticket-title {
   font-weight: 600;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mention-flag {
+  letter-spacing: 1px;
+}
+
+:deep(.el-table .row-has-mention) {
+  background: #fff7ed !important;
+}
+
+:deep(.el-table .row-has-mention .cell) {
+  border-bottom-color: #fde68a !important;
 }
 
 .ticket-description {

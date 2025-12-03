@@ -16,6 +16,9 @@
  */
 
 import { ref, computed } from 'vue'
+import { getAccessToken } from '@/utils/authStorage'
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
 // ==================== 类型定义 ====================
 
@@ -36,7 +39,10 @@ export const NotificationTypes = {
 
   // 系统提醒
   OFFLINE: 'offline',
-  SESSION_ASSIGNED: 'session_assigned'
+  SESSION_ASSIGNED: 'session_assigned',
+
+  // 【增量3-4】SLA 预警
+  SLA_ALERT: 'sla_alert'
 } as const
 
 export type NotificationType = typeof NotificationTypes[keyof typeof NotificationTypes]
@@ -114,6 +120,10 @@ const isFlashing = ref(false)
 
 // 音频对象缓存
 const audioCache: { [key: string]: HTMLAudioElement } = {}
+
+let agentEventsController: AbortController | null = null
+let agentEventsRetryTimer: number | null = null
+let agentEventsStopping = false
 
 // ==================== 工具函数 ====================
 
@@ -472,6 +482,171 @@ function notifyOffline() {
   }))
 }
 
+function handleAgentEvent(event: any) {
+  if (!event || !event.type) {
+    return
+  }
+  switch (event.type) {
+    case 'mention': {
+      const fromAgent = event.from_agent || '同事'
+      const context = event.ticket_id || event.session_name || '会话'
+      const content = event.content || ''
+      notifyMention(fromAgent, context, content)
+      break
+    }
+    case 'assist_request': {
+      const data = event.data || {}
+      notifyAssistRequest(data.requester || '同事', data.question || '', data.id || '')
+      break
+    }
+    case 'assist_answer': {
+      const data = event.data || {}
+      showNotification({
+        type: NotificationTypes.ASSIST_REQUEST,
+        title: '✅ 协助回复',
+        body: `${data.assistant || '同事'} 已回复: ${(data.answer || '').substring(0, 80)}`,
+        tag: `assist_answer_${data.id || ''}`,
+        data: { requestId: data.id }
+      })
+      break
+    }
+    case 'transfer_request': {
+      const data = event.data || {}
+      notifyTransferRequest(data.from_agent || '同事', data.session_name || '', data.reason)
+      break
+    }
+    // 【增量3-4】SLA 预警
+    case 'sla_alert': {
+      const alerts = event.alerts || []
+      for (const alert of alerts) {
+        const alertTypeLabel = alert.alert_type === 'frt' ? '首次响应' : '解决时效'
+        const statusLabel = {
+          warning: '⚠️ 即将超时',
+          urgent: '🔴 紧急',
+          violated: '❌ 已超时'
+        }[alert.status] || ''
+        const remaining = alert.remaining_seconds || 0
+        let timeText = '已超时'
+        if (remaining > 0) {
+          if (remaining < 60) {
+            timeText = `剩余 ${Math.round(remaining)} 秒`
+          } else if (remaining < 3600) {
+            timeText = `剩余 ${Math.round(remaining / 60)} 分钟`
+          } else {
+            timeText = `剩余 ${(remaining / 3600).toFixed(1)} 小时`
+          }
+        }
+        showNotification({
+          type: NotificationTypes.SLA_ALERT,
+          title: `${statusLabel} SLA预警`,
+          body: `工单 ${alert.ticket_id} ${alertTypeLabel}${timeText}`,
+          tag: `sla_alert_${alert.ticket_id}_${alert.alert_type}`,
+          data: { ticketId: alert.ticket_id, alertType: alert.alert_type }
+        })
+      }
+      break
+    }
+    case 'sla_alert_summary': {
+      // 管理员汇总预警（仅记录日志，不弹窗）
+      const summary = event.summary || {}
+      if (summary.total > 0) {
+        console.log(`📊 SLA预警汇总: ${summary.total}个预警 (warning:${summary.by_status?.warning || 0}, urgent:${summary.by_status?.urgent || 0}, violated:${summary.by_status?.violated || 0})`)
+      }
+      break
+    }
+    default:
+      console.log('ℹ️ 未处理的坐席事件', event)
+  }
+}
+
+async function connectAgentEventStream() {
+  if (agentEventsController) {
+    return
+  }
+  const token = getAccessToken()
+  if (!token) {
+    return
+  }
+
+  agentEventsStopping = false
+  agentEventsController = new AbortController()
+  try {
+    const response = await fetch(`${API_BASE}/api/agent/events`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      signal: agentEventsController.signal
+    })
+
+    if (!response.ok || !response.body) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const events = buffer.split('\n\n')
+      buffer = events.pop() || ''
+      for (const raw of events) {
+        if (raw.startsWith('data:')) {
+          const payload = raw.slice(5).trim()
+          if (!payload) continue
+          try {
+            const data = JSON.parse(payload)
+            handleAgentEvent(data)
+          } catch (err) {
+            console.error('❌ 解析坐席事件失败:', err)
+          }
+        }
+      }
+    }
+  } catch (error) {
+    if (!agentEventsStopping) {
+      scheduleAgentEventReconnect()
+    }
+  } finally {
+    agentEventsController = null
+  }
+}
+
+function scheduleAgentEventReconnect() {
+  if (agentEventsStopping || agentEventsRetryTimer) {
+    return
+  }
+  agentEventsRetryTimer = window.setTimeout(() => {
+    agentEventsRetryTimer = null
+    connectAgentEventStream()
+  }, 5000)
+}
+
+function startAgentEventStream() {
+  if (agentEventsStopping) {
+    agentEventsStopping = false
+  }
+  if (agentEventsController || agentEventsRetryTimer) {
+    return
+  }
+  connectAgentEventStream()
+}
+
+function stopAgentEventStream() {
+  agentEventsStopping = true
+  if (agentEventsController) {
+    agentEventsController.abort()
+    agentEventsController = null
+  }
+  if (agentEventsRetryTimer) {
+    clearTimeout(agentEventsRetryTimer)
+    agentEventsRetryTimer = null
+  }
+}
+
 // ==================== 初始化 ====================
 
 // 页面加载时检查权限
@@ -502,6 +677,8 @@ export function useNotification() {
     showNotification,
     updateSettings,
     clearUnreadCount,
+    startAgentEventStream,
+    stopAgentEventStream,
 
     // 便捷方法
     notifyNewSession,

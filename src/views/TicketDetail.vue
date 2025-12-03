@@ -5,11 +5,14 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useTicketStore } from '@/stores/ticketStore'
 import { useAgentStore } from '@/stores/agentStore'
 import type { TicketPriority, TicketStatus, TicketCommentType } from '@/types'
+import { getAccessToken } from '@/utils/authStorage'
+import SLAStatusCard from '@/components/tickets/SLAStatusCard.vue'
 
 const route = useRoute()
 const router = useRouter()
 const ticketStore = useTicketStore()
 const agentStore = useAgentStore()
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 
 const ticketId = computed(() => route.params.ticketId as string)
 const selectedStatus = ref<TicketStatus | ''>('')
@@ -23,6 +26,16 @@ const manualAssignNote = ref('')
 const commentContent = ref('')
 const commentType = ref<TicketCommentType>('internal')
 const commentSubmitting = ref(false)
+const commentMentions = ref<string[]>([])
+const showCommentMentionSelector = ref(false)
+const commentMentionSearch = ref('')
+const mentionAgentsLoading = ref(false)
+const mentionCandidatesRaw = ref<Array<{
+  id: string
+  username: string
+  name: string
+  status: string
+}>>([])
 
 const statusDict: Record<TicketStatus, { label: string; type: string }> = {
   pending: { label: '待处理', type: 'warning' },
@@ -180,9 +193,13 @@ const handleAddComment = async () => {
   try {
     await ticketStore.addTicketComment(ticket.value.ticket_id, {
       content: commentContent.value.trim(),
-      comment_type: commentType.value
+      comment_type: commentType.value,
+      mentions: commentMentions.value
     })
     commentContent.value = ''
+    commentMentions.value = []
+    showCommentMentionSelector.value = false
+    commentMentionSearch.value = ''
     ElMessage.success('备注已添加')
   } catch (error: any) {
     ElMessage.error(error.message || '添加备注失败')
@@ -222,8 +239,82 @@ watch(
   }
 )
 
+const fetchMentionAgents = async () => {
+  try {
+    mentionAgentsLoading.value = true
+    const token = getAccessToken()
+    if (!token) {
+      throw new Error('认证信息已失效，请重新登录')
+    }
+    const response = await fetch(`${API_BASE}/api/agents/available`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+    const data = await response.json()
+    mentionCandidatesRaw.value = data.data?.items || []
+  } catch (error) {
+    console.warn('⚠️ 加载可用坐席失败:', error)
+  } finally {
+    mentionAgentsLoading.value = false
+  }
+}
+
+watch(showCommentMentionSelector, (visible) => {
+  if (visible && mentionCandidatesRaw.value.length === 0 && !mentionAgentsLoading.value) {
+    fetchMentionAgents()
+  }
+})
+
+const mentionCandidates = computed(() => {
+  const map = new Map<string, { username: string; name: string; status: string }>()
+  mentionCandidatesRaw.value.forEach(agent => {
+    map.set(agent.username, {
+      username: agent.username,
+      name: agent.name || agent.username,
+      status: agent.status
+    })
+  })
+  if (agentStore.agentId) {
+    map.set(agentStore.agentId, {
+      username: agentStore.agentId,
+      name: agentStore.agentName || agentStore.agentId,
+      status: 'online'
+    })
+  }
+  return Array.from(map.values())
+})
+
+const mentionLabelMap = computed(() => {
+  const map: Record<string, string> = {}
+  mentionCandidates.value.forEach(item => {
+    map[item.username] = item.name
+  })
+  return map
+})
+
+const filteredCommentMentionCandidates = computed(() => {
+  const keyword = commentMentionSearch.value.trim().toLowerCase()
+  if (!keyword) {
+    return mentionCandidates.value
+  }
+  return mentionCandidates.value.filter(candidate =>
+    candidate.name.toLowerCase().includes(keyword) ||
+    candidate.username.toLowerCase().includes(keyword)
+  )
+})
+
+const getMentionLabel = (username: string) => mentionLabelMap.value[username] || username
+const removeCommentMention = (username: string) => {
+  commentMentions.value = commentMentions.value.filter(item => item !== username)
+}
+
 onMounted(async () => {
   await loadTicket()
+  fetchMentionAgents()
 })
 </script>
 
@@ -269,6 +360,9 @@ onMounted(async () => {
         </div>
       </div>
     </section>
+
+    <!-- SLA 状态监控 -->
+    <SLAStatusCard v-if="ticket && ticket.status !== 'archived'" :ticket-id="ticketId" />
 
     <section class="ticket-columns" v-if="ticket">
       <div class="panel">
@@ -395,6 +489,54 @@ onMounted(async () => {
         :rows="3"
         placeholder="记录关键沟通、下一步行动或客户反馈"
       />
+      <div class="mention-selector">
+        <div class="selector-header">
+          <span>提醒同事</span>
+          <button
+            type="button"
+            class="btn-text"
+            @click="showCommentMentionSelector = !showCommentMentionSelector"
+          >
+            {{ showCommentMentionSelector ? '收起列表' : '选择@对象' }}
+          </button>
+        </div>
+        <div class="selected-mentions" v-if="commentMentions.length">
+          <span
+            v-for="mention in commentMentions"
+            :key="mention"
+            class="mention-chip removable"
+          >
+            @{{ getMentionLabel(mention) }}
+            <button type="button" class="remove-chip" @click="removeCommentMention(mention)">×</button>
+          </span>
+        </div>
+        <div v-if="showCommentMentionSelector" class="mention-options">
+          <input
+            v-model="commentMentionSearch"
+            class="mention-search"
+            type="text"
+            placeholder="搜索坐席姓名或ID"
+          />
+          <div
+            v-for="candidate in filteredCommentMentionCandidates"
+            :key="candidate.username"
+            class="mention-option"
+          >
+            <label>
+              <input
+                type="checkbox"
+                :value="candidate.username"
+                v-model="commentMentions"
+              />
+              <span class="name">{{ candidate.name }}</span>
+              <span class="id">@{{ candidate.username }}</span>
+            </label>
+          </div>
+          <div v-if="!filteredCommentMentionCandidates.length" class="no-mention-result">
+            暂无匹配坐席
+          </div>
+        </div>
+      </div>
       <div class="comment-actions">
         <el-select v-model="commentType" style="width: 140px">
           <el-option label="内部备注" value="internal" />
@@ -417,6 +559,15 @@ onMounted(async () => {
             <el-tag size="small" type="success" v-else>公开</el-tag>
           </div>
           <p>{{ comment.content }}</p>
+          <div v-if="comment.mentions && comment.mentions.length" class="note-mentions">
+            <span
+              v-for="mention in comment.mentions"
+              :key="mention"
+              class="mention-chip"
+            >
+              @{{ getMentionLabel(mention) }}
+            </span>
+          </div>
         </div>
       </div>
       <div v-else class="empty-state">暂无备注</div>
@@ -561,6 +712,102 @@ onMounted(async () => {
   align-items: center;
   font-size: 13px;
   color: #555;
+}
+
+.mention-selector {
+  margin-top: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+}
+
+.selected-mentions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mention-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #eef2ff;
+  color: #4338ca;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.mention-chip.removable {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.mention-chip .remove-chip {
+  margin-left: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  font-size: 12px;
+}
+
+.mention-options {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mention-option label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.mention-option .id {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.mention-search {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #cbd5f5;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.no-mention-result {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+.note-mentions {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .empty-state {

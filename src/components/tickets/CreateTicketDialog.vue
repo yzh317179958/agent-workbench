@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useTicketStore } from '@/stores/ticketStore'
 import { useAgentStore } from '@/stores/agentStore'
+import { useTemplateStore } from '@/stores/templateStore'
 import type {
   TicketPriority,
   TicketType,
@@ -23,6 +24,7 @@ const emit = defineEmits<{
 
 const ticketStore = useTicketStore()
 const agentStore = useAgentStore()
+const templateStore = useTemplateStore()
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
@@ -31,6 +33,8 @@ const smartRecommendation = ref<SmartAssignRecommendation | null>(null)
 const smartAssignLoading = ref(false)
 const smartAssignError = ref<string | null>(null)
 let smartTimer: number | null = null
+const selectedTemplateId = ref('')
+const templateApplying = ref(false)
 
 const form = ref({
   title: '',
@@ -92,6 +96,7 @@ const resetForm = () => {
     assigned_agent_id: '',
     assigned_agent_name: ''
   }
+  selectedTemplateId.value = ''
   formRef.value?.clearValidate()
   resetSmartState()
 }
@@ -103,6 +108,44 @@ watch(
       resetForm()
     } else if (assignmentMode.value === 'smart') {
       scheduleSmartRecommendation()
+      if (!templateStore.templates.length && !templateStore.loading) {
+        templateStore.loadTemplates().catch(() => {})
+      }
+    }
+  }
+)
+
+const currentTemplate = computed(() =>
+  templateStore.templates.find((tmpl) => tmpl.id === selectedTemplateId.value) || null
+)
+
+const applyTemplate = async () => {
+  if (!selectedTemplateId.value) return
+  templateApplying.value = true
+  try {
+    const rendered = await templateStore.renderTemplate(selectedTemplateId.value, {
+      customer_name: form.value.customer_name.trim() || undefined
+    })
+    form.value.title = rendered.title
+    form.value.description = rendered.description
+  } catch (error: any) {
+    ElMessage.error(error?.message || '套用模板失败')
+  } finally {
+    templateApplying.value = false
+  }
+}
+
+watch(selectedTemplateId, () => {
+  if (selectedTemplateId.value) {
+    applyTemplate()
+  }
+})
+
+watch(
+  () => form.value.customer_name,
+  () => {
+    if (selectedTemplateId.value) {
+      applyTemplate()
     }
   }
 )
@@ -241,6 +284,37 @@ const handleSubmit = async () => {
           maxlength="200"
           show-word-limit
         />
+      </el-form-item>
+
+      <el-form-item label="使用模板">
+        <div class="template-select">
+          <el-select
+            v-model="selectedTemplateId"
+            placeholder="选择模板"
+            filterable
+            clearable
+            :loading="templateStore.loading"
+          >
+            <el-option
+              v-for="tmpl in templateStore.templates"
+              :key="tmpl.id"
+              :value="tmpl.id"
+              :label="`${tmpl.name} · ${tmpl.category}`"
+            />
+          </el-select>
+          <el-button
+            v-if="selectedTemplateId"
+            type="primary"
+            link
+            :loading="templateApplying"
+            @click="applyTemplate"
+          >
+            重新套用
+          </el-button>
+        </div>
+        <p v-if="currentTemplate" class="template-meta">
+          类型：{{ currentTemplate.ticket_type }} · 优先级：{{ currentTemplate.priority }}
+        </p>
       </el-form-item>
 
       <el-form-item label="问题描述" prop="description">
@@ -387,5 +461,21 @@ const handleSubmit = async () => {
 .smart-extra {
   color: var(--el-text-color-regular);
   font-size: 13px;
+}
+
+.template-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.template-select :deep(.el-select) {
+  flex: 1;
+}
+
+.template-meta {
+  margin-top: 4px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
 }
 </style>

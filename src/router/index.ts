@@ -50,6 +50,23 @@ const router = createRouter({
       }
     },
     {
+      path: '/templates',
+      name: 'TemplateManagement',
+      component: () => import('@/views/TemplateManagement.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    // 【增量3-3】SLA 监控仪表盘
+    {
+      path: '/sla',
+      name: 'SLADashboard',
+      component: () => import('@/views/SLADashboard.vue'),
+      meta: {
+        requiresAuth: true
+      }
+    },
+    {
       path: '/',
       redirect: '/dashboard'
     }
