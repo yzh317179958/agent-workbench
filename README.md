@@ -1,4 +1,4 @@
-# Fiido 坐席工作台
+# Fifo 坐席工作台
 
 基于 Vue 3 + TypeScript + Vite 的智能客服坐席工作台。
 
