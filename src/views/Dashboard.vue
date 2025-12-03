@@ -115,6 +115,9 @@ const sortBy = ref<'default' | 'newest' | 'oldest' | 'vip' | 'waitTime'>('defaul
 const agentFilterMode = ref<'all' | 'mine' | 'unassigned' | 'custom'>('unassigned')
 const customAgentValue = ref('')
 
+// 高级筛选折叠状态
+const showAdvancedFilters = ref(false)
+
 // 搜索关键词
 const searchKeyword = ref('')
 
@@ -1608,8 +1611,22 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- 【L1-1-Part1-模块1】高级筛选栏 -->
-        <div class="advanced-filters">
+        <!-- 高级筛选按钮 -->
+        <div class="filter-toggle-bar">
+          <button
+            class="toggle-filters-btn"
+            @click="showAdvancedFilters = !showAdvancedFilters"
+          >
+            <span>{{ showAdvancedFilters ? '▼' : '▶' }}</span>
+            高级筛选
+            <span v-if="!showAdvancedFilters && hasActiveFilters" class="filter-count">
+              {{ activeFilters.length }}
+            </span>
+          </button>
+        </div>
+
+        <!-- 【L1-1-Part1-模块1】高级筛选栏（可折叠） -->
+        <div v-show="showAdvancedFilters" class="advanced-filters">
           <div class="filter-group">
             <label>时间范围</label>
             <select v-model="timeRange" class="filter-select">
@@ -3139,6 +3156,55 @@ onUnmounted(() => {
 
 .filter-tab:hover:not(.active) {
   color: var(--agent-primary-color);
+}
+
+/* 高级筛选折叠按钮 */
+.filter-toggle-bar {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--agent-secondary-bg);
+  border-bottom: 1px solid var(--agent-border-color);
+}
+
+.toggle-filters-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--agent-body-bg);
+  border: 1px solid var(--agent-border-color);
+  border-radius: var(--agent-border-radius-sm, 4px);
+  font-size: 12px;
+  color: var(--agent-text-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-filters-btn:hover {
+  border-color: var(--agent-primary-color);
+  color: var(--agent-primary-color);
+  background: var(--agent-primary-light, #E6F7FF);
+}
+
+.toggle-filters-btn span:first-child {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  background: var(--agent-primary-color);
+  color: white;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 4px;
 }
 
 .advanced-filters {
