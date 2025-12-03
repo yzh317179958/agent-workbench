@@ -143,7 +143,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (event: 'close'): void
+  (event: 'update:visible', value: boolean): void
 }>()
 
 const settingsStore = useSettingsStore()
@@ -181,7 +181,7 @@ function syncSettings() {
 }
 
 function closeDialog() {
-  emit('close')
+  emit('update:visible', false)
 }
 
 function handleImmediateChange() {
@@ -200,7 +200,7 @@ function handleSave() {
   settingsStore.settings.behavior.autoLoadHistory = localSettings.behavior.autoLoadHistory
   settingsStore.settings.behavior.sessionRefreshInterval = localSettings.behavior.sessionRefreshInterval
 
-  emit('close')
+  emit('update:visible', false)
 }
 
 watch(() => props.visible, (visible) => {

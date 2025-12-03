@@ -1147,6 +1147,16 @@ const handleSendMessage = async () => {
   if (!messageInput.value.trim() || isSending.value) return
   if (!sessionStore.currentSession) return
 
+  // 【修复】如果会话还在 pending_manual 状态，先自动接入
+  if (sessionStore.currentSession.status === 'pending_manual') {
+    try {
+      await handleTakeover(sessionStore.currentSession.session_name, { silent: true })
+    } catch (err: any) {
+      alert(`❌ 接入会话失败: ${err.message}`)
+      return
+    }
+  }
+
   const content = messageInput.value.trim()
   messageInput.value = ''
   isSending.value = true
@@ -1826,7 +1836,7 @@ onUnmounted(() => {
           </div>
 
           <!-- 聊天输入区域 -->
-          <div v-if="sessionStore.currentSession.status === 'manual_live'" class="chat-input-area">
+          <div v-if="sessionStore.currentSession.status === 'manual_live' || sessionStore.currentSession.status === 'pending_manual'" class="chat-input-area">
             <!-- 快捷短语面板 -->
             <div v-if="showQuickReplies" class="quick-replies-panel">
               <QuickReplies @select="handleQuickReplySelect" />
@@ -2449,10 +2459,11 @@ onUnmounted(() => {
 /* ========== 整体布局 ========== */
 /* 参考拼多多商家工作台、千牛等专业客服系统 */
 .dashboard-container {
-  height: 100vh;
+  height: 100%; /* Changed from 100vh to 100% to fit in MainLayout */
+  width: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--agent-body-bg, #F7F8FA);
+  background: var(--agent-body-bg, #F5F5F5);
   font-size: calc(14px * var(--agent-font-scale, 1));
   color: var(--agent-text-color, #262626);
 }
@@ -2858,7 +2869,7 @@ onUnmounted(() => {
 /* Sessions Panel */
 .sessions-panel {
   flex-shrink: 0;
-  width: 320px; /* Adjusted width */
+  width: 280px; /* ui.md recommended width */
   border-right: 1px solid var(--agent-border-color);
   background: var(--agent-secondary-bg);
   display: flex;
@@ -3595,8 +3606,16 @@ onUnmounted(() => {
   align-items: flex-start;
 }
 
-.message.user {
+/* 坐席消息（右对齐） */
+.message.agent {
   flex-direction: row-reverse;
+}
+
+/* 客户和AI/系统消息（左对齐，默认） */
+.message.user,
+.message.assistant,
+.message.system {
+  flex-direction: row;
 }
 
 .message.system {
@@ -3629,26 +3648,26 @@ onUnmounted(() => {
 }
 
 .message.user .message-avatar {
-  background: linear-gradient(135deg, #B37FEB 0%, #9254DE 100%);
+  background: #1890FF; /* User Avatar Blue */
 }
 
 .message.assistant .message-avatar {
-  background: linear-gradient(135deg, #95DE64 0%, #52C41A 100%);
+  background: #52C41A; /* AI Avatar Green */
 }
 
 .message.agent .message-avatar {
-  background: linear-gradient(135deg, var(--agent-primary-hover, #40A9FF) 0%, var(--agent-primary-color, #1890FF) 100%);
+  background: #722ED1; /* Agent Avatar Purple (or maintain Blue but distinguish) */
 }
 
 /* 消息主体 */
 .message-body {
-  max-width: 65%;
+  max-width: 70%; /* ui.md recommends 70% */
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.message.user .message-body {
+.message.agent .message-body {
   align-items: flex-end;
 }
 
@@ -3658,7 +3677,7 @@ onUnmounted(() => {
   gap: 6px;
 }
 
-.message.user .message-header {
+.message.agent .message-header {
   flex-direction: row-reverse;
 }
 
@@ -3676,59 +3695,62 @@ onUnmounted(() => {
 /* 消息气泡 */
 .message-content {
   padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 13px;
+  border-radius: 10px; /* ui.md recommends 10px */
+  font-size: 14px;
   line-height: 1.6;
   word-break: break-word;
-  box-shadow: var(--agent-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .dashboard-container.bubble-flat .message .message-content {
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .dashboard-container.bubble-rounded .message .message-content {
   border-radius: 18px;
 }
 
-/* 用户消息 - 蓝色渐变 */
+/* 客户消息 - 白色背景 + 边框 (ui.md) */
 .message.user .message-content {
-  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
-  color: white;
-  border-bottom-right-radius: 4px;
+  background: #FFFFFF;
+  color: #333333;
+  border: 1px solid #E5E5E5;
+  border-top-left-radius: 2px;
 }
 
-/* AI助手消息 - 白色卡片 */
+/* AI助手消息 - 白色背景 + 边框 */
 .message.assistant .message-content {
-  background: var(--agent-secondary-bg, #FFFFFF);
-  color: var(--agent-text-color, #262626);
-  border: 1px solid var(--agent-border-color, #E8E8E8);
-  border-bottom-left-radius: 4px;
+  background: #FFFFFF;
+  color: #333333;
+  border: 1px solid #E5E5E5;
+  border-top-left-radius: 2px;
 }
 
-/* 坐席消息 - 淡蓝卡片 */
+/* 坐席消息 - 淡蓝背景 (ui.md) */
 .message.agent .message-content {
-  background: var(--agent-primary-light, #E6F7FF);
-  color: var(--agent-primary-dark, #0050B3);
-  border-bottom-left-radius: 4px;
-  border: 1px solid rgba(24, 144, 255, 0.2);
+  background: #E6F7FF;
+  color: #333333;
+  border: 1px solid #BAE7FF;
+  border-top-right-radius: 2px;
 }
 
 /* 深色模式适配 */
 .dashboard-container.theme-dark .message.user .message-content {
-  background: linear-gradient(135deg, var(--agent-primary-hover, #40A9FF) 0%, var(--agent-primary-color, #1890FF) 100%);
+  background: #1f1f1f;
+  color: #e5e5e5;
+  border-color: #333;
 }
 
 .dashboard-container.theme-dark .message.assistant .message-content {
-  background: var(--agent-secondary-bg);
-  border-color: var(--agent-border-color);
-  color: var(--agent-text-color);
+  background: #1f1f1f;
+  color: #e5e5e5;
+  border-color: #333;
 }
 
 .dashboard-container.theme-dark .message.agent .message-content {
-  background: #1e3a5f;
-  color: #bfdbfe;
-  border-color: #3b82f6;
+  background: #111d2c;
+  color: #a6c8ff;
+  border-color: #15395b;
 }
 
 /* ========== 聊天输入区域 ========== */

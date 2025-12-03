@@ -211,7 +211,7 @@ const { visible } = defineProps<{
 
 // Emits
 const emit = defineEmits<{
-  (e: 'close'): void
+  (e: 'update:visible', value: boolean): void
 }>()
 
 // 使用通知系统
@@ -315,7 +315,7 @@ function testSound() {
 
 // 关闭对话框
 function closeDialog() {
-  emit('close')
+  emit('update:visible', false)
 }
 </script>
 
