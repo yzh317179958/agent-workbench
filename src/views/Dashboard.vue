@@ -3984,9 +3984,17 @@ onUnmounted(() => {
 .note-item {
   background: var(--agent-secondary-bg);
   border: 1px solid var(--agent-border-color);
-  border-radius: var(--agent-border-radius);
-  padding: 12px;
+  border-radius: var(--agent-border-radius-lg, 8px);
+  padding: 14px;
   box-shadow: var(--agent-shadow-sm, 0 1px 2px 0 rgba(0,0,0,0.05));
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.history-item:hover,
+.note-item:hover {
+  border-color: var(--agent-primary-color, #1890FF);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+  transform: translateY(-1px);
 }
 
 .history-header,
@@ -4058,41 +4066,72 @@ onUnmounted(() => {
 }
 
 .note-edit {
-  margin-top: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--agent-border-color, #E8E8E8);
 }
 
 .note-edit-actions {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
   justify-content: flex-end;
+}
+
+.note-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--agent-border-color-light, #F0F0F0);
 }
 
 .add-note {
   border-top: 1px solid var(--agent-border-color);
-  padding: 14px 16px;
+  padding: 16px;
   background: var(--agent-secondary-bg);
   flex-shrink: 0;
+  border-radius: 0 0 var(--agent-border-radius-lg, 8px) var(--agent-border-radius-lg, 8px);
+}
+
+.notes-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.notes-content .notes-list {
+  flex: 1;
+  overflow-y: auto;
 }
 
 .note-textarea {
   width: 100%;
-  padding: 9px 12px;
+  padding: 10px 14px;
   border: 1px solid var(--agent-border-color);
-  border-radius: var(--agent-border-radius-sm, 6px);
+  border-radius: var(--agent-border-radius, 6px);
   font-size: 13px;
   line-height: 1.5;
   resize: vertical;
-  min-height: 60px;
+  min-height: 70px;
   font-family: inherit;
   background: var(--agent-body-bg);
   color: var(--agent-text-color);
-  transition: border-color 0.2s;
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.note-textarea::placeholder {
+  color: var(--agent-text-placeholder, #BFBFBF);
+}
+
+.note-textarea:hover {
+  border-color: var(--agent-border-color-dark, #D9D9D9);
 }
 
 .note-textarea:focus {
   outline: none;
   border-color: var(--agent-primary-color);
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
 }
 
 .note-textarea:disabled {
@@ -4104,30 +4143,56 @@ onUnmounted(() => {
 .add-note-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 8px;
+  margin-top: 10px;
+}
+
+.add-note-actions .btn-primary {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--agent-border-radius, 6px);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.25);
+}
+
+.add-note-actions .btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 10px rgba(24, 144, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.add-note-actions .btn-primary:disabled {
+  background: var(--agent-text-placeholder, #BFBFBF);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .btn-text {
   background: none;
   border: none;
-  padding: 4px 8px;
+  padding: 5px 10px;
   font-size: 12px;
   color: var(--agent-primary-color);
   cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.2s;
+  border-radius: var(--agent-border-radius-sm, 4px);
+  transition: all var(--transition-fast, 0.15s ease);
+  font-weight: 500;
 }
 
 .btn-text:hover {
-  background: rgba(var(--agent-primary-color-rgb), 0.1);
+  background: var(--agent-primary-light, #E6F7FF);
 }
 
 .btn-text.text-danger {
-  color: #ef4444;
+  color: var(--agent-danger, #FF4D4F);
 }
 
 .btn-text.text-danger:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--agent-danger-light, #FFF2F0);
 }
 
 .btn-cancel {
