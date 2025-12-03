@@ -118,6 +118,9 @@ const customAgentValue = ref('')
 // 高级筛选折叠状态
 const showAdvancedFilters = ref(false)
 
+// 队列统计折叠状态
+const showQueueStats = ref(false)
+
 // 搜索关键词
 const searchKeyword = ref('')
 
@@ -1550,8 +1553,58 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 【模块2】队列统计信息 - 精简版 -->
-        <div v-if="sessionStore.queueStats.total_count > 0" class="queue-stats-compact">
+        <!-- 筛选标签 -->
+        <div class="filter-tabs">
+          <button
+            class="filter-tab"
+            :class="{ active: currentFilter === 'pending_manual' }"
+            @click="currentFilter = 'pending_manual'"
+          >
+            待接入
+          </button>
+          <button
+            class="filter-tab"
+            :class="{ active: currentFilter === 'manual_live' }"
+            @click="currentFilter = 'manual_live'"
+          >
+            服务中
+          </button>
+          <button
+            class="filter-tab"
+            :class="{ active: currentFilter === 'all' }"
+            @click="currentFilter = 'all'"
+          >
+            全部
+          </button>
+        </div>
+
+        <!-- 折叠按钮组 -->
+        <div class="filter-toggle-bar">
+          <button
+            v-if="sessionStore.queueStats.total_count > 0"
+            class="toggle-filters-btn"
+            :class="{ active: showQueueStats }"
+            @click="showQueueStats = !showQueueStats"
+          >
+            <span>{{ showQueueStats ? '▼' : '▶' }}</span>
+            队列统计
+            <span class="stat-badge">{{ sessionStore.queueStats.total_count }}</span>
+          </button>
+          <button
+            class="toggle-filters-btn"
+            :class="{ active: showAdvancedFilters }"
+            @click="showAdvancedFilters = !showAdvancedFilters"
+          >
+            <span>{{ showAdvancedFilters ? '▼' : '▶' }}</span>
+            高级筛选
+            <span v-if="!showAdvancedFilters && hasActiveFilters" class="filter-count">
+              {{ activeFilters.length }}
+            </span>
+          </button>
+        </div>
+
+        <!-- 【模块2】队列统计信息（可折叠） -->
+        <div v-if="sessionStore.queueStats.total_count > 0 && showQueueStats" class="queue-stats-compact">
           <div class="stats-row">
             <div class="stat-card">
               <div class="stat-icon">👥</div>
@@ -1584,45 +1637,6 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- 筛选标签 -->
-        <div class="filter-tabs">
-          <button
-            class="filter-tab"
-            :class="{ active: currentFilter === 'pending_manual' }"
-            @click="currentFilter = 'pending_manual'"
-          >
-            待接入
-          </button>
-          <button
-            class="filter-tab"
-            :class="{ active: currentFilter === 'manual_live' }"
-            @click="currentFilter = 'manual_live'"
-          >
-            服务中
-          </button>
-          <button
-            class="filter-tab"
-            :class="{ active: currentFilter === 'all' }"
-            @click="currentFilter = 'all'"
-          >
-            全部
-          </button>
-        </div>
-
-        <!-- 高级筛选按钮 -->
-        <div class="filter-toggle-bar">
-          <button
-            class="toggle-filters-btn"
-            @click="showAdvancedFilters = !showAdvancedFilters"
-          >
-            <span>{{ showAdvancedFilters ? '▼' : '▶' }}</span>
-            高级筛选
-            <span v-if="!showAdvancedFilters && hasActiveFilters" class="filter-count">
-              {{ activeFilters.length }}
-            </span>
-          </button>
         </div>
 
         <!-- 【L1-1-Part1-模块1】高级筛选栏（可折叠） -->
@@ -3162,6 +3176,7 @@ onUnmounted(() => {
 .filter-toggle-bar {
   display: flex;
   align-items: center;
+  gap: 8px;
   padding: 8px 16px;
   background: var(--agent-secondary-bg);
   border-bottom: 1px solid var(--agent-border-color);
@@ -3187,12 +3202,19 @@ onUnmounted(() => {
   background: var(--agent-primary-light, #E6F7FF);
 }
 
+.toggle-filters-btn.active {
+  border-color: var(--agent-primary-color);
+  color: var(--agent-primary-color);
+  background: var(--agent-primary-light, #E6F7FF);
+}
+
 .toggle-filters-btn span:first-child {
   font-size: 10px;
   transition: transform 0.2s ease;
 }
 
-.filter-count {
+.filter-count,
+.stat-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
