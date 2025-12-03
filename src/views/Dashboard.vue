@@ -1547,62 +1547,40 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 【模块2】队列统计信息 -->
-        <div v-if="sessionStore.queueStats.total_count > 0" class="queue-stats">
-          <div class="queue-header">
-            <span class="queue-icon">📋</span>
-            <span class="queue-title">等待队列</span>
-            <span class="queue-count">{{ sessionStore.queueStats.total_count }}人</span>
-            <span class="queue-count vip">VIP {{ sessionStore.queueStats.vip_count }}</span>
-          </div>
-          <div class="queue-metrics">
-            <div class="queue-metric">
-              <span class="metric-icon">🔴</span>
-              <span class="metric-label">VIP客户</span>
-              <span class="metric-value">{{ sessionStore.queueStats.vip_count }}</span>
-            </div>
-            <div class="queue-metric">
-              <span class="metric-icon">⏱️</span>
-              <span class="metric-label">平均等待</span>
-              <span class="metric-value">{{ formatTime(sessionStore.queueStats.avg_wait_time) }}</span>
-            </div>
-            <div class="queue-metric">
-              <span class="metric-icon">⚠️</span>
-              <span class="metric-label">最长等待</span>
-              <span class="metric-value">{{ formatTime(sessionStore.queueStats.max_wait_time) }}</span>
-            </div>
-          </div>
-          <div v-if="sessionStore.queueData.length" class="queue-list">
-            <div
-              v-for="item in sessionStore.queueData"
-              :key="item.session_name"
-              class="queue-item"
-            >
-              <div class="queue-item-header">
-                <div class="queue-item-info">
-                  <span class="queue-name">{{ item.user_profile?.nickname || item.session_name }}</span>
-                  <span
-                    class="queue-priority"
-                    :class="formatQueuePriority(item.priority_level).className"
-                  >
-                    {{ formatQueuePriority(item.priority_level).label }}
-                  </span>
-                  <span v-if="item.is_vip" class="queue-vip">VIP</span>
-                </div>
-                <span class="queue-position">#{{ item.position }}</span>
+        <!-- 【模块2】队列统计信息 - 精简版 -->
+        <div v-if="sessionStore.queueStats.total_count > 0" class="queue-stats-compact">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon">👥</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ sessionStore.queueStats.total_count }}</div>
+                <div class="stat-label">排队中</div>
               </div>
-              <div class="queue-item-body">
-                <span>等待 {{ formatTime(item.wait_time_seconds) }}</span>
-                <span v-if="item.urgent_keywords?.length">
-                  关键词：{{ item.urgent_keywords.join(' / ') }}
-                </span>
-                <span v-if="item.last_message">
-                  最近：{{ item.last_message }}
-                </span>
+            </div>
+            <div class="stat-card vip">
+              <div class="stat-icon">⭐</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ sessionStore.queueStats.vip_count }}</div>
+                <div class="stat-label">VIP</div>
               </div>
             </div>
           </div>
-          <div v-else class="queue-empty">暂无详细队列数据</div>
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon">⏱️</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ formatTime(sessionStore.queueStats.avg_wait_time) }}</div>
+                <div class="stat-label">平均等待</div>
+              </div>
+            </div>
+            <div class="stat-card warning">
+              <div class="stat-icon">⚠️</div>
+              <div class="stat-content">
+                <div class="stat-value">{{ formatTime(sessionStore.queueStats.max_wait_time) }}</div>
+                <div class="stat-label">最长等待</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 筛选标签 -->
@@ -3033,81 +3011,104 @@ onUnmounted(() => {
   color: var(--agent-text-color);
 }
 
-.queue-stats {
-  padding: 10px 16px;
+/* ========== 队列统计 - 精简卡片样式 ========== */
+.queue-stats-compact {
+  padding: 12px 16px;
   border-bottom: 1px solid var(--agent-border-color);
-  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
-  color: #92400e;
+  background: var(--agent-secondary-bg);
 }
 
-.dashboard-container.theme-dark .queue-stats {
-  background: linear-gradient(135deg, #3d2e00 0%, #4a3800 100%);
-  color: #fcd34d;
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-.queue-header {
+.stats-row:last-child {
+  margin-bottom: 0;
+}
+
+.stat-card {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.queue-icon {
-  font-size: 15px;
-}
-
-.queue-title {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.queue-count {
-  margin-left: auto;
-  padding: 1px 7px;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #d97706;
-}
-
-.dashboard-container.theme-dark .queue-count {
-  background: rgba(0, 0, 0, 0.4);
-  color: #fcd34d;
-}
-
-.queue-metrics {
-  display: flex;
   gap: 10px;
+  padding: 12px;
+  background: var(--agent-body-bg);
+  border: 1px solid var(--agent-border-color);
+  border-radius: var(--agent-border-radius, 6px);
+  transition: all 0.2s ease;
 }
 
-.queue-metric {
+.stat-card:hover {
+  border-color: var(--agent-primary-color);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+}
+
+.stat-card.vip {
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  border-color: #f59e0b;
+}
+
+.dashboard-container.theme-dark .stat-card.vip {
+  background: linear-gradient(135deg, #3d2e00 0%, #4a3800 100%);
+  border-color: #d97706;
+}
+
+.stat-card.warning .stat-icon {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.stat-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.stat-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 5px;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 5px;
+  gap: 2px;
 }
 
-.dashboard-container.theme-dark .queue-metric {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.metric-icon {
-  font-size: 15px;
-  margin-bottom: 1px;
-}
-
-.metric-label {
-  font-size: 9px;
-  margin-bottom: 1px;
-}
-
-.metric-value {
-  font-size: 13px;
+.stat-value {
+  font-size: 18px;
   font-weight: 700;
+  color: var(--agent-text-color);
+  line-height: 1.2;
+}
+
+.stat-card.vip .stat-value {
+  color: #d97706;
+}
+
+.dashboard-container.theme-dark .stat-card.vip .stat-value {
+  color: #fcd34d;
+}
+
+.stat-card.warning .stat-value {
+  color: #dc2626;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--agent-text-tertiary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card.vip .stat-label {
+  color: #92400e;
+}
+
+.dashboard-container.theme-dark .stat-card.vip .stat-label {
+  color: #fbbf24;
 }
 
 .filter-tabs {
@@ -3230,81 +3231,6 @@ onUnmounted(() => {
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
-}
-
-.queue-list {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.queue-item {
-  padding: 10px 12px;
-  border: 1px solid var(--agent-border-color);
-  border-radius: 8px;
-  background: var(--agent-body-bg);
-}
-
-.queue-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.queue-item-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  color: var(--agent-text-color);
-}
-
-.queue-position {
-  font-size: 12px;
-  color: var(--agent-text-light);
-}
-
-.queue-item-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--agent-text-light);
-}
-
-.queue-priority {
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.priority-urgent {
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
-}
-
-.priority-high {
-  background: rgba(249, 115, 22, 0.15);
-  color: #ea580c;
-}
-
-.priority-normal {
-  background: rgba(148, 163, 184, 0.2);
-  color: var(--agent-text-light);
-}
-
-.queue-vip {
-  font-size: 12px;
-  color: #f59e0b;
-}
-
-.queue-empty {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--agent-text-light);
 }
 
 .search-box {
