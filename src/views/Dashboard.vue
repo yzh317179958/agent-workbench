@@ -2754,64 +2754,88 @@ onUnmounted(() => {
 .agent-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .agent-actions button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: var(--agent-border-radius, 6px);
+  font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  border: 1px solid #E5E7EB;
-  background: #FFFFFF;
-  color: #374151;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast, 0.15s ease);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-secondary-bg, #FFFFFF);
+  color: var(--agent-text-color, #262626);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   cursor: pointer;
+  position: relative;
+  white-space: nowrap;
 }
 
 .agent-actions button:hover {
-  background: #F9FAFB;
-  border-color: #1890FF;
-  color: #1890FF;
-  box-shadow: 0 1px 3px rgba(24, 144, 255, 0.12);
+  background: var(--agent-primary-light, #E6F7FF);
+  border-color: var(--agent-primary-color, #1890FF);
+  color: var(--agent-primary-color, #1890FF);
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.12);
+}
+
+.agent-actions button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(24, 144, 255, 0.1);
 }
 
 .agent-actions button svg {
   width: 16px;
   height: 16px;
   stroke: currentColor;
+  flex-shrink: 0;
+}
+
+/* 退出登录按钮特殊样式 */
+.agent-actions button:last-child {
+  background: transparent;
+  border-color: transparent;
+  color: var(--agent-text-tertiary, #8C8C8C);
+  box-shadow: none;
+}
+
+.agent-actions button:last-child:hover {
+  background: var(--agent-danger-light, #FFF2F0);
+  border-color: var(--agent-danger, #FF4D4F);
+  color: var(--agent-danger, #FF4D4F);
+  box-shadow: none;
 }
 
 .admin-dropdown .admin-menu-button {
-  background: var(--agent-secondary-bg);
-  color: var(--agent-text-color);
-  border-color: var(--agent-border-color);
+  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.25);
 }
 
 .admin-dropdown .admin-menu-button:hover {
-  background: rgba(var(--agent-primary-color-rgb), 0.1);
-  border-color: var(--agent-primary-color);
-  color: var(--agent-primary-color);
+  box-shadow: 0 4px 10px rgba(24, 144, 255, 0.35);
+  transform: translateY(-1px);
 }
 
 .pending-badge,
 .unread-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #ef4444; /* Red for alerts */
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
   color: white;
   font-size: 10px;
   font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 9999px; /* Fully rounded */
-  min-width: 20px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
   text-align: center;
-  border: 1px solid var(--agent-secondary-bg); /* Border to stand out */
+  box-shadow: 0 2px 4px rgba(255, 77, 79, 0.3);
+  border: 2px solid var(--agent-secondary-bg, #FFFFFF);
 }
 
 .pending-badge {
@@ -2900,36 +2924,37 @@ onUnmounted(() => {
 
 .detailed-stats {
   display: flex;
-  padding: 8px 16px;
-  gap: 12px;
-  border-bottom: 1px solid var(--agent-border-color);
-  background: var(--agent-secondary-bg);
+  padding: 10px 16px;
+  gap: 16px;
+  border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-secondary-bg, #FFFFFF);
 }
 
 .detail-stat {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .detail-label {
-  font-size: 10px;
-  color: var(--agent-text-light);
+  font-size: 11px;
+  color: var(--agent-text-tertiary, #8C8C8C);
+  font-weight: 500;
 }
 
 .detail-value {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--agent-text-color);
+  color: var(--agent-primary-color, #1890FF);
 }
 
 .work-summary-card {
-  margin: 16px;
-  background: var(--agent-secondary-bg);
-  border: 1px solid var(--agent-border-color);
-  border-radius: var(--agent-border-radius);
+  margin: 14px;
+  background: var(--agent-secondary-bg, #FFFFFF);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  border-radius: var(--agent-border-radius-lg, 8px);
   padding: 14px;
-  box-shadow: var(--agent-shadow);
+  box-shadow: var(--agent-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
 }
 
 .work-summary-header {
@@ -2938,23 +2963,25 @@ onUnmounted(() => {
   justify-content: space-between;
   font-weight: 600;
   font-size: 13px;
-  color: var(--agent-text-color);
-  margin-bottom: 10px;
+  color: var(--agent-text-color, #262626);
+  margin-bottom: 12px;
 }
 
 .work-summary-refresh {
   border: none;
-  background: rgba(var(--agent-primary-color-rgb), 0.1);
-  color: var(--agent-primary-color);
+  background: var(--agent-primary-light, #E6F7FF);
+  color: var(--agent-primary-color, #1890FF);
   font-size: 11px;
-  padding: 3px 9px;
-  border-radius: 9999px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
 .work-summary-refresh:hover {
-  background: rgba(var(--agent-primary-color-rgb), 0.2);
+  background: var(--agent-primary-color, #1890FF);
+  color: white;
 }
 
 .work-summary-grid {
@@ -2965,14 +2992,20 @@ onUnmounted(() => {
 
 .summary-item {
   padding: 12px 14px;
-  border-radius: var(--agent-border-radius-sm, 6px);
-  border: 1px solid var(--agent-border-color);
-  background: var(--agent-body-bg);
+  border-radius: var(--agent-border-radius, 6px);
+  border: 1px solid var(--agent-border-color, #E8E8E8);
+  background: var(--agent-body-bg, #F7F8FA);
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.summary-item:hover {
+  border-color: var(--agent-primary-color, #1890FF);
+  background: var(--agent-primary-light, #E6F7FF);
 }
 
 .summary-label {
   font-size: 11px;
-  color: var(--agent-text-light);
+  color: var(--agent-text-tertiary, #8C8C8C);
   margin-bottom: 4px;
   display: block;
 }
