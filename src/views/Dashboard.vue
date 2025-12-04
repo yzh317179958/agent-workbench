@@ -2466,15 +2466,17 @@ onUnmounted(() => {
 
 <style scoped>
 /* ========== 整体布局 ========== */
-/* 参考拼多多商家工作台、千牛等专业客服系统 */
+/* 简约、大气、白色背景为主 */
 .dashboard-container {
   height: 100%; /* Changed from 100vh to 100% to fit in MainLayout */
   width: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--agent-body-bg, #F5F5F5);
+  background: #F5F5F5; /* 极浅灰背景 */
   font-size: calc(14px * var(--agent-font-scale, 1));
-  color: var(--agent-text-color, #262626);
+  color: #262626; /* 深灰文字 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  line-height: 1.5;
 }
 
 /* ========== 头部样式 - 专业简约风格 ========== */
@@ -2879,8 +2881,8 @@ onUnmounted(() => {
 .sessions-panel {
   flex-shrink: 0;
   width: 280px; /* ui.md recommended width */
-  border-right: 1px solid var(--agent-border-color);
-  background: var(--agent-secondary-bg);
+  border-right: 1px solid #E8E8E8;
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Important: content inside will scroll */
@@ -2889,63 +2891,61 @@ onUnmounted(() => {
 .session-list-component {
   flex-grow: 1; /* Allow the list to take remaining space */
   overflow-y: auto; /* Make the list itself scrollable */
-  border-top: 1px solid var(--agent-border-color);
+  border-top: 1px solid #E8E8E8;
 }
 
-/* ========== 统计面板 ========== */
+/* ========== 统计面板 - 简约专业风格 ========== */
 .stats-bar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  padding: 10px 14px;
-  gap: 8px;
+  padding: 16px 20px;
+  gap: 12px;
   border-bottom: 1px solid var(--agent-border-color, #E8E8E8);
-  background: var(--agent-body-bg, #F7F8FA);
+  background: #FFFFFF;
 }
 
 .stat-item {
   text-align: center;
-  padding: 10px 6px;
-  border-radius: var(--agent-border-radius, 6px);
+  padding: 16px 12px;
+  border-radius: 4px; /* 简约小圆角 */
   cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
-  border: 1px solid var(--agent-border-color, #E8E8E8);
-  background: var(--agent-secondary-bg, #FFFFFF);
-  box-shadow: var(--agent-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.04));
+  transition: all 0.2s ease;
+  border: 1px solid #E8E8E8;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); /* 极浅阴影 */
 }
 
 .stat-item:hover {
-  border-color: var(--agent-primary-color, #1890FF);
-  box-shadow: var(--agent-shadow-hover, 0 4px 16px rgba(24, 144, 255, 0.12));
+  border-color: #D9D9D9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
 }
 
 .stat-item.pending {
-  background: var(--agent-warning-light, #FFFBE6);
-  border-color: var(--agent-warning-border, #FFE58F);
+  border-left: 3px solid #FAAD14; /* 左侧色条 */
 }
 
 .stat-item.live {
-  background: var(--agent-success-light, #F6FFED);
-  border-color: var(--agent-success-border, #B7EB8F);
+  border-left: 3px solid #52C41A;
 }
 
 .stat-item.all {
-  background: var(--agent-body-bg, #F7F8FA);
-  border-color: var(--agent-border-color, #E8E8E8);
+  border-left: 3px solid #1890FF;
 }
 
 .stat-value {
   display: block;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--agent-text-color, #262626);
-  margin-bottom: 2px;
+  font-size: 28px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
 }
 
 .stat-label {
-  font-size: 10px;
-  color: var(--agent-text-tertiary, #8C8C8C);
-  font-weight: 500;
+  font-size: 12px;
+  color: #8C8C8C;
+  font-weight: 400;
 }
 
 .detailed-stats {
@@ -3172,40 +3172,40 @@ onUnmounted(() => {
   color: var(--agent-primary-color);
 }
 
-/* 高级筛选折叠按钮 */
+/* 高级筛选折叠按钮 - 简约风格 */
 .filter-toggle-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--agent-secondary-bg);
+  gap: 10px;
+  padding: 12px 20px;
+  background: #FFFFFF;
   border-bottom: 1px solid var(--agent-border-color);
 }
 
 .toggle-filters-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 6px 12px;
-  background: var(--agent-body-bg);
-  border: 1px solid var(--agent-border-color);
-  border-radius: var(--agent-border-radius-sm, 4px);
-  font-size: 12px;
-  color: var(--agent-text-color);
+  background: #FFFFFF;
+  border: 1px solid #D9D9D9;
+  border-radius: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #595959;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .toggle-filters-btn:hover {
-  border-color: var(--agent-primary-color);
-  color: var(--agent-primary-color);
-  background: var(--agent-primary-light, #E6F7FF);
+  border-color: #1890FF;
+  color: #1890FF;
 }
 
 .toggle-filters-btn.active {
-  border-color: var(--agent-primary-color);
-  color: var(--agent-primary-color);
-  background: var(--agent-primary-light, #E6F7FF);
+  border-color: #1890FF;
+  color: #1890FF;
+  background: #F0F5FF;
 }
 
 .toggle-filters-btn span:first-child {
@@ -3221,12 +3221,12 @@ onUnmounted(() => {
   min-width: 18px;
   height: 18px;
   padding: 0 6px;
-  background: var(--agent-primary-color);
+  background: #1890FF;
   color: white;
   border-radius: 9px;
   font-size: 11px;
-  font-weight: 600;
-  margin-left: 4px;
+  font-weight: 500;
+  margin-left: 6px;
 }
 
 .advanced-filters {
@@ -3370,7 +3370,7 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--agent-secondary-bg);
+  background: #FFFFFF;
   overflow: hidden;
 }
 
@@ -3607,7 +3607,7 @@ onUnmounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 16px 20px;
-  background: var(--agent-body-bg, #F7F8FA);
+  background: #FAFAFA; /* 极浅灰背景，与消息气泡形成层次 */
   position: relative;
   z-index: 1;
 }
@@ -3770,8 +3770,8 @@ onUnmounted(() => {
 /* ========== 聊天输入区域 ========== */
 .chat-input-area {
   padding: 14px 20px;
-  border-top: 1px solid var(--agent-border-color, #E8E8E8);
-  background: var(--agent-secondary-bg, #FFFFFF);
+  border-top: 1px solid #E8E8E8;
+  background: #FFFFFF;
   position: relative;
   flex-shrink: 0;
 }
@@ -3801,29 +3801,27 @@ onUnmounted(() => {
 .quick-reply-btn {
   width: 40px;
   height: 40px;
-  border: 1px solid var(--agent-border-color, #E8E8E8);
-  border-radius: var(--agent-border-radius, 6px);
-  background: var(--agent-body-bg, #F7F8FA);
+  border: 1px solid #D9D9D9;
+  border-radius: 2px;
+  background: #FFFFFF;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast, 0.15s ease);
+  transition: all 0.2s ease;
   flex-shrink: 0;
-  color: var(--agent-text-secondary, #595959);
+  color: #595959;
 }
 
 .quick-reply-btn:hover {
-  border-color: var(--agent-primary-color, #1890FF);
-  background: var(--agent-primary-light, #E6F7FF);
-  color: var(--agent-primary-color, #1890FF);
+  border-color: #1890FF;
+  color: #1890FF;
 }
 
 .quick-reply-btn.active {
-  border-color: var(--agent-primary-color, #1890FF);
-  background: var(--agent-primary-color, #1890FF);
+  border-color: #1890FF;
+  background: #1890FF;
   color: white;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .quick-reply-btn.active .btn-icon {
@@ -3838,60 +3836,57 @@ onUnmounted(() => {
 .message-input {
   flex: 1;
   padding: 10px 14px;
-  border: 1px solid var(--agent-border-color, #E8E8E8);
-  border-radius: var(--agent-border-radius, 6px);
+  border: 1px solid #D9D9D9;
+  border-radius: 2px;
   font-size: 14px;
   resize: none;
   min-height: 40px;
   max-height: 100px;
   font-family: inherit;
-  background: var(--agent-secondary-bg, #FFFFFF);
-  color: var(--agent-text-color, #262626);
-  transition: all var(--transition-fast, 0.15s ease);
+  background: #FFFFFF;
+  color: #262626;
+  transition: all 0.2s ease;
 }
 
 .message-input::placeholder {
-  color: var(--agent-text-placeholder, #BFBFBF);
+  color: #BFBFBF;
 }
 
 .message-input:hover {
-  border-color: var(--agent-border-color-dark, #D9D9D9);
+  border-color: #40A9FF;
 }
 
 .message-input:focus {
   outline: none;
-  border-color: var(--agent-primary-color, #1890FF);
-  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+  border-color: #1890FF;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
 }
 
 /* 发送按钮 */
 .send-btn {
   padding: 10px 20px;
-  background: linear-gradient(135deg, var(--agent-primary-color, #1890FF) 0%, var(--agent-primary-hover, #40A9FF) 100%);
+  background: #1890FF;
   color: white;
   border: none;
-  border-radius: var(--agent-border-radius, 6px);
+  border-radius: 2px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  transition: all var(--transition-fast, 0.15s ease);
+  transition: all 0.2s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.25);
 }
 
 .send-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.35);
+  background: #40A9FF;
 }
 
 .send-btn:active:not(:disabled) {
-  transform: translateY(0);
+  background: #096DD9;
 }
 
 .send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  box-shadow: none;
 }
 
 /* ========== 右侧客户边栏 ========== */
